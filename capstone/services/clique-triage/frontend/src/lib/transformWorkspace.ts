@@ -370,6 +370,8 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     failureClock: fmtClock(workspace.build_failure_timestamp),
     service: workspace.isolated_service,
     exception: workspace.isolated_exception,
+    gitSource: workspace.git_source,
+    ragRetrieval: workspace.rag_retrieval,
     evidenceSummary,
     eliminated,
     reportTimeline: buildReportTimeline(streamEvents),

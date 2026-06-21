@@ -1,220 +1,61 @@
 import { useCallback, useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { DependencyChainPhase } from "./components/DependencyChainPhase";
-import { EcosystemEvidencePhase } from "./components/EcosystemEvidencePhase";
-import { EliminationSequence } from "./components/EliminationSequence";
-import { EvidenceConstellation } from "./components/EvidenceConstellation";
-import { EvidenceScreen } from "./components/EvidenceScreen";
-import { LogParsingPhase } from "./components/LogParsingPhase";
-import { PhaseHeader } from "./components/PhaseHeader";
-import { TimelineScreen } from "./components/TimelineScreen";
-import { TriggerScreen } from "./components/TriggerScreen";
-import { VerdictScreen } from "./components/VerdictScreen";
+import { EvidenceGatheredStep } from "./components/EvidenceGatheredStep";
+import { EliminationStep } from "./components/EliminationStep";
+import { FailureStep } from "./components/FailureStep";
+import { GuidedShell } from "./components/GuidedShell";
+import { HandoffStep } from "./components/HandoffStep";
+import { InvestigationLeadStep } from "./components/InvestigationLeadStep";
+import { LandingScreen } from "./components/LandingScreen";
 import { fetchWorkspace, transformWorkspace } from "./lib/transformWorkspace";
-import type { InvestigationPhase, TransformedWorkspace } from "./types/workspace";
+import { GUIDED_STEP_COPY, type GuidedStep, type TransformedWorkspace } from "./types/workspace";
 import "./styles/globals.css";
 
-const PARSING_WAIT_MS = 1800;
-const PARSING_HOLD_MS = 2800;
-const PHASE_PAUSE_MS = 1600;
-const CHAIN_FIRST_MS = 1000;
-const CHAIN_STEP_MS = 1400;
-const ECOSYSTEM_FIRST_MS = 1000;
-const ECOSYSTEM_STEP_MS = 1600;
-const ELIMINATION_MS = 3800;
-const DEPRIORITIZE_EXTRA_MS = 2200;
-const CONSTELLATION_NODE_MS = 1400;
-const CONSTELLATION_BEFORE_FOCUS_MS = 1000;
-const CONSTELLATION_FOCUS_MS = 3200;
-const VERDICT_HOLD_MS = 3500;
-const EVIDENCE_HOLD_MS = 4000;
-const TIMELINE_STEP_MS = 1000;
-const TIMELINE_END_MS = 2000;
+type ActiveStep = Exclude<GuidedStep, "loading" | "error">;
+
+const STEP_ORDER: ActiveStep[] = ["landing", "step1", "step2", "step3", "step4", "done"];
+
+function nextStep(current: ActiveStep): ActiveStep {
+  const index = STEP_ORDER.indexOf(current);
+  return STEP_ORDER[Math.min(index + 1, STEP_ORDER.length - 1)] ?? current;
+}
+
+function prevStep(current: ActiveStep): ActiveStep {
+  const index = STEP_ORDER.indexOf(current);
+  return STEP_ORDER[Math.max(index - 1, 0)] ?? current;
+}
 
 export default function App() {
-  const [phase, setPhase] = useState<InvestigationPhase>("loading");
+  const [step, setStep] = useState<GuidedStep>("loading");
   const [data, setData] = useState<TransformedWorkspace | null>(null);
-  const [showException, setShowException] = useState(false);
-  const [chainVisible, setChainVisible] = useState(0);
-  const [ecosystemVisible, setEcosystemVisible] = useState(0);
-  const [elimIndex, setElimIndex] = useState(0);
-  const [constellationNodes, setConstellationNodes] = useState(0);
-  const [constellationFocused, setConstellationFocused] = useState(false);
-  const [timelineVisible, setTimelineVisible] = useState(0);
-  const [showReset, setShowReset] = useState(false);
 
   useEffect(() => {
     fetchWorkspace()
       .then((workspace) => {
         setData(transformWorkspace(workspace));
-        setPhase("trigger");
+        setStep("landing");
       })
-      .catch(() => setPhase("error"));
+      .catch(() => setStep("error"));
   }, []);
 
-  useEffect(() => {
-    if (phase !== "parsing") return;
-
-    if (!showException) {
-      const timer = setTimeout(() => setShowException(true), PARSING_WAIT_MS);
-      return () => clearTimeout(timer);
-    }
-
-    const timer = setTimeout(() => {
-      setChainVisible(0);
-      setPhase("dependency");
-    }, PARSING_HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [phase, showException]);
-
-  useEffect(() => {
-    if (phase !== "dependency" || !data) return;
-
-    if (chainVisible === 0) {
-      const timer = setTimeout(() => setChainVisible(1), CHAIN_FIRST_MS);
-      return () => clearTimeout(timer);
-    }
-
-    if (chainVisible >= data.dependencyChain.length) {
-      const timer = setTimeout(() => {
-        setEcosystemVisible(0);
-        setPhase("ecosystem");
-      }, PHASE_PAUSE_MS);
-      return () => clearTimeout(timer);
-    }
-
-    const timer = setTimeout(() => setChainVisible((n) => n + 1), CHAIN_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [phase, chainVisible, data]);
-
-  useEffect(() => {
-    if (phase !== "ecosystem" || !data) return;
-
-    if (ecosystemVisible === 0) {
-      const timer = setTimeout(() => setEcosystemVisible(1), ECOSYSTEM_FIRST_MS);
-      return () => clearTimeout(timer);
-    }
-
-    if (ecosystemVisible >= data.ecosystemCards.length) {
-      const timer = setTimeout(() => {
-        setElimIndex(0);
-        setPhase("eliminating");
-      }, PHASE_PAUSE_MS);
-      return () => clearTimeout(timer);
-    }
-
-    const timer = setTimeout(() => setEcosystemVisible((n) => n + 1), ECOSYSTEM_STEP_MS);
-    return () => clearTimeout(timer);
-  }, [phase, ecosystemVisible, data]);
-
-  useEffect(() => {
-    if (phase !== "eliminating" || !data) return;
-
-    if (elimIndex >= data.eliminated.length) {
-      const timer = setTimeout(() => {
-        setConstellationNodes(0);
-        setConstellationFocused(false);
-        setPhase("connecting");
-      }, PHASE_PAUSE_MS);
-      return () => clearTimeout(timer);
-    }
-
-    const item = data.eliminated[elimIndex];
-    const delay =
-      item.status === "deprioritized" ? ELIMINATION_MS + DEPRIORITIZE_EXTRA_MS : ELIMINATION_MS;
-
-    const timer = setTimeout(() => setElimIndex((n) => n + 1), delay);
-    return () => clearTimeout(timer);
-  }, [phase, elimIndex, data]);
-
-  useEffect(() => {
-    if (phase !== "connecting" || !data) return;
-
-    const orderLen = data.constellation.revealOrder.length;
-
-    if (!constellationFocused && constellationNodes < orderLen) {
-      const delay = constellationNodes === 0 ? CHAIN_FIRST_MS : CONSTELLATION_NODE_MS;
-      const timer = setTimeout(() => setConstellationNodes((n) => n + 1), delay);
-      return () => clearTimeout(timer);
-    }
-
-    if (!constellationFocused && constellationNodes >= orderLen) {
-      const timer = setTimeout(() => setConstellationFocused(true), CONSTELLATION_BEFORE_FOCUS_MS);
-      return () => clearTimeout(timer);
-    }
-
-    if (constellationFocused) {
-      const timer = setTimeout(() => {
-        setTimelineVisible(0);
-        setShowReset(false);
-        setPhase("verdict");
-      }, CONSTELLATION_FOCUS_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [phase, constellationNodes, constellationFocused, data]);
-
-  useEffect(() => {
-    if (phase !== "verdict") return;
-    const timer = setTimeout(() => setPhase("evidence"), VERDICT_HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [phase]);
-
-  useEffect(() => {
-    if (phase !== "evidence") return;
-    const timer = setTimeout(() => {
-      setTimelineVisible(0);
-      setPhase("timeline");
-    }, EVIDENCE_HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [phase]);
-
-  useEffect(() => {
-    if (phase !== "timeline" || !data) return;
-
-    if (timelineVisible < data.reportTimeline.length) {
-      const timer = setTimeout(() => setTimelineVisible((n) => n + 1), TIMELINE_STEP_MS);
-      return () => clearTimeout(timer);
-    }
-
-    if (!showReset) {
-      const timer = setTimeout(() => setShowReset(true), TIMELINE_END_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [phase, timelineVisible, showReset, data]);
-
-  const resetReplay = useCallback(() => {
-    setShowException(false);
-    setChainVisible(0);
-    setEcosystemVisible(0);
-    setElimIndex(0);
-    setConstellationNodes(0);
-    setConstellationFocused(false);
-    setTimelineVisible(0);
-    setShowReset(false);
+  const handleStart = useCallback(() => setStep("step1"), []);
+  const handleNext = useCallback(() => {
+    setStep((current) => nextStep(current as ActiveStep));
   }, []);
+  const handleBack = useCallback(() => {
+    setStep((current) => prevStep(current as ActiveStep));
+  }, []);
+  const handleRestart = useCallback(() => setStep("landing"), []);
 
-  const handleBegin = useCallback(() => {
-    resetReplay();
-    setPhase("parsing");
-  }, [resetReplay]);
-
-  const handleReset = useCallback(() => {
-    resetReplay();
-    setPhase("trigger");
-  }, [resetReplay]);
-
-  const replayPhase = (p: InvestigationPhase): p is Exclude<InvestigationPhase, "loading" | "trigger" | "error"> =>
-    !["loading", "trigger", "error"].includes(p);
-
-  if (phase === "loading") {
+  if (step === "loading") {
     return (
       <div className="session-shell">
-        <div className="session">Loading…</div>
+        <div className="session session-loading">Loading investigation workspace…</div>
       </div>
     );
   }
 
-  if (phase === "error" || !data) {
+  if (step === "error" || !data) {
     return (
       <div className="session-shell">
         <div className="session">
@@ -229,88 +70,75 @@ export default function App() {
 
   return (
     <div className="session-shell">
-      <div className="ambient-glow ambient-glow-a" aria-hidden />
-      <div className="ambient-glow ambient-glow-b" aria-hidden />
-
       <div className="session">
         <AnimatePresence mode="wait">
-          {phase === "trigger" && (
+          {step === "landing" && (
             <motion.div
-              key="trigger"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.5 }}
+              key="landing"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
             >
-              <TriggerScreen exception={data.exception} onBegin={handleBegin} />
+              <LandingScreen onStart={handleStart} />
             </motion.div>
           )}
 
-          {replayPhase(phase) && (
+          {step === "step1" && (
+            <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <GuidedShell step="step1" copy={GUIDED_STEP_COPY.step1} onBack={handleBack} onNext={handleNext}>
+                <FailureStep
+                  exception={data.exception}
+                  service={data.service}
+                  failureClock={data.failureClock}
+                />
+              </GuidedShell>
+            </motion.div>
+          )}
+
+          {step === "step2" && (
+            <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <GuidedShell step="step2" copy={GUIDED_STEP_COPY.step2} onBack={handleBack} onNext={handleNext}>
+                <EvidenceGatheredStep gitSource={data.gitSource} ragRetrieval={data.ragRetrieval} />
+              </GuidedShell>
+            </motion.div>
+          )}
+
+          {step === "step3" && (
+            <motion.div key="step3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <GuidedShell step="step3" copy={GUIDED_STEP_COPY.step3} onBack={handleBack} onNext={handleNext}>
+                <EliminationStep items={data.eliminated} summary={data.evidenceSummary} />
+              </GuidedShell>
+            </motion.div>
+          )}
+
+          {step === "step4" && (
+            <motion.div key="step4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <GuidedShell
+                step="step4"
+                copy={GUIDED_STEP_COPY.step4}
+                onBack={handleBack}
+                onNext={handleNext}
+                nextLabel="See handoff"
+              >
+                <InvestigationLeadStep lead={data.investigationLead} primaryLeadUrl={data.primaryLeadUrl} />
+              </GuidedShell>
+            </motion.div>
+          )}
+
+          {step === "done" && (
             <motion.div
-              key={phase}
-              className="phase-view"
-              initial={{ opacity: 0, y: 16 }}
+              key="done"
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35 }}
             >
-              <PhaseHeader phase={phase} />
-
-              {phase === "parsing" && (
-                <LogParsingPhase exception={data.exception} showException={showException} />
-              )}
-
-              {phase === "dependency" && (
-                <DependencyChainPhase chain={data.dependencyChain} visibleCount={chainVisible} />
-              )}
-
-              {phase === "ecosystem" && (
-                <EcosystemEvidencePhase cards={data.ecosystemCards} visibleCount={ecosystemVisible} />
-              )}
-
-              {phase === "eliminating" && (
-                <EliminationSequence
-                  items={data.eliminated}
-                  activeIndex={elimIndex}
-                  summary={data.evidenceSummary}
-                />
-              )}
-
-              {phase === "connecting" && (
-                <EvidenceConstellation
-                  nodes={data.constellation.nodes}
-                  edges={data.constellation.edges}
-                  revealOrder={data.constellation.revealOrder}
-                  visibleNodeCount={constellationNodes}
-                  focusNodeId={data.constellation.focusNodeId}
-                  focused={constellationFocused}
-                  primaryLeadLabel={data.primaryLeadLabel}
-                />
-              )}
-
-              {phase === "verdict" && (
-                <VerdictScreen lead={data.investigationLead} primaryLeadUrl={data.primaryLeadUrl} />
-              )}
-
-              {phase === "evidence" && <EvidenceScreen signals={data.primarySignals} />}
-
-              {phase === "timeline" && (
-                <TimelineScreen events={data.reportTimeline} visibleCount={timelineVisible} />
-              )}
-
-              {showReset && phase === "timeline" && (
-                <motion.button
-                  type="button"
-                  className="btn-reset"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  onClick={handleReset}
-                >
-                  New investigation
-                </motion.button>
-              )}
+              <HandoffStep
+                leadPrimary={data.investigationLead.primary}
+                primaryLeadUrl={data.primaryLeadUrl}
+                onRestart={handleRestart}
+              />
             </motion.div>
           )}
         </AnimatePresence>

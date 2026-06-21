@@ -27,8 +27,8 @@ Clique targets **investigation-heavy failures** — cases where engineers must *
 | Item | Link / note |
 |------|-------------|
 | **GitHub repository (required)** | https://github.com/ashmitha247/clique-triage |
-| **MVP / demo (preferred)** | *See Section 7 below.* Local: `bash run-dev.sh` → http://localhost:5173. Optional static deploy: Vercel/Netlify from `capstone/services/clique-triage/frontend/dist` after `npm run build`. |
-| **Primary demo path** | React investigation replay @ port **5173** (`run-dev.sh`). Legacy Streamlit on 8501 is **not** the submission demo. |
+| **MVP / demo (preferred)** | Deploy: `cd capstone/services/clique-triage/frontend && npm run build && npx vercel dist --prod`. Local: `bash run-dev.sh` → http://localhost:5173 — **Start investigation**, click **Next** through 4 guided steps. |
+| **Primary demo path** | Guided walkthrough @ port **5173** (`run-dev.sh`). Step 3 elimination panel = hero screenshot. Legacy Streamlit on 8501 is **not** the demo. |
 
 ---
 
@@ -232,7 +232,7 @@ OUTPUT: Investigation replay in browser — elimination sidebar, ranked leads,
 | Synthetic elimination | UI adds `express 4.21.0 release` as ruled-out decoy (not in dependency chain) |
 | Deprioritization | `payment_gateway.py` marked deprioritized (“stable across 14 builds”) |
 | `buildInvestigationLead()` | Primary lead + supporting bullets for verdict screen |
-| Phase timings | App.tsx orchestrates 8-step cinematic replay (~45–60s) |
+| Phase navigation | App.tsx — guided 4-step walkthrough with Next/Back (no auto-advance) |
 
 ## Models / APIs used (MVP)
 
@@ -376,7 +376,7 @@ The MVP proves Layer 1. Layers 2–3 are the AI hackathon extension path with a 
                                       ▼
                  ┌─────────────────────────────────────────────────┐
                  │     React SPA (Vite, port 5173)                 │
-                 │  transformWorkspace → 8-phase replay UI         │
+                 │  Guided UI: landing + 4 steps + handoff          │
                  │  Elimination sidebar | Investigation lead       │
                  └─────────────────────────────────────────────────┘
 
@@ -495,7 +495,7 @@ bash run-dev.sh
 | Go log traceback extraction | ✅ Working |
 | Python heuristic ranking + git elimination | ✅ Working |
 | Mock external evidence (releases, issues) | ✅ Working (fixture) |
-| React 8-phase investigation replay | ✅ Working |
+| React guided investigation walkthrough | ✅ Working |
 | Elimination sidebar with examined count | ✅ Working |
 | Investigation lead + supporting evidence screen | ✅ Working |
 | GitHub Actions CI for Go slicer | ✅ Working |

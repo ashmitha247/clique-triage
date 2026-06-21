@@ -151,6 +151,8 @@ export interface TransformedWorkspace {
   failureClock: string;
   service: string;
   exception: string;
+  gitSource: string;
+  ragRetrieval?: RagRetrieval;
   evidenceSummary: EvidenceSummary;
   eliminated: EliminatedItem[];
   reportTimeline: StreamEvent[];
@@ -169,7 +171,40 @@ export interface TransformedWorkspace {
   };
 }
 
-/** Cinematic replay — one focus screen at a time (Arc-style). */
+/** Guided walkthrough — user clicks Next/Back through 4 steps. */
+export type GuidedStep = "loading" | "landing" | "step1" | "step2" | "step3" | "step4" | "done" | "error";
+
+export const GUIDED_STEP_COUNT = 4;
+
+export interface GuidedStepCopy {
+  title: string;
+  subtitle: string;
+  caption?: string;
+}
+
+export const GUIDED_STEP_COPY: Record<Exclude<GuidedStep, "loading" | "landing" | "done" | "error">, GuidedStepCopy> = {
+  step1: {
+    title: "Your build failed",
+    subtitle: "Here's the error from your CI pipeline.",
+    caption: "Most tools stop here. Clique starts here.",
+  },
+  step2: {
+    title: "Clique gathered evidence from 4 places",
+    subtitle: "Logs, git history, package releases, and community reports — searched together.",
+    caption: "Hybrid RAG retrieval ranks the most relevant documents from the corpus.",
+  },
+  step3: {
+    title: "Clique ruled out what doesn't matter",
+    subtitle: "12 signals examined. Most were noise.",
+    caption: "The value isn't finding the answer — it's narrowing the search space.",
+  },
+  step4: {
+    title: "Start here",
+    subtitle: "Your most likely investigation lead — where to spend the next 15 minutes.",
+  },
+};
+
+/** @deprecated Legacy cinematic replay — kept for reference, not used in guided flow. */
 export type InvestigationPhase =
   | "loading"
   | "trigger"

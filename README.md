@@ -10,7 +10,7 @@
 
 ## What exists today (MVP)
 
-The current demo is a **deterministic triage pipeline** plus a **cinematic React investigation replay**:
+The current demo is a **triage pipeline** plus a **guided investigation walkthrough** (click Next through 4 steps):
 
 ```text
 failed_build.log
@@ -19,7 +19,7 @@ isolated_error.json
       ↓  Python triage engine + hybrid RAG (BM25 + TF-IDF + RRF)
 investigation_workspace.json
       ↓  React/Vite SPA
-Investigation replay (8 steps, one focus at a time)
+Guided demo: Gather → Eliminate → Rank → Investigation lead
 ```
 
 **No LLM calls in the MVP.** Ranking combines **hybrid RAG retrieval** (BM25 + TF-IDF + RRF over `mock_internet/rag_corpus.json`) with deterministic git elimination rules. Gemini synthesis is roadmap.
@@ -50,7 +50,7 @@ Clique automates the **assembly and elimination** phase before debugging begins.
 |-------|------|
 | Go log slicer | Extract traceback + exception from raw CI logs |
 | Python triage + RAG | Rank leads via hybrid retrieval, discard noise, write workspace JSON |
-| React console | Forensic replay UI — progressive discovery, not a dashboard |
+| React console | Guided walkthrough — landing + 4 steps with Next/Back, elimination hero on step 3 |
 
 External evidence in the demo comes from `mock_internet/external_evidence.json`. Git history uses real `git log` when available, otherwise `data/git_log_fixture.json`.
 
@@ -63,7 +63,19 @@ cd capstone/services/clique-triage
 bash run-dev.sh
 ```
 
-Open [http://localhost:5173](http://localhost:5173).
+Open [http://localhost:5173](http://localhost:5173) → **Start investigation** → click **Next** through 4 steps.
+
+### Deploy demo (Vercel)
+
+```bash
+cd capstone/services/clique-triage/frontend
+npm run build
+npx vercel dist --prod
+```
+
+Paste the production URL in InnovateZ form and [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md).
+
+**Maintainer / judge kit:** [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md) · [docs/EVIDENCE_CAPTURE_CHECKLIST.md](docs/EVIDENCE_CAPTURE_CHECKLIST.md)
 
 **Requirements:** Python 3, Go (optional — run separately), Node.js 18+ inside WSL.
 
