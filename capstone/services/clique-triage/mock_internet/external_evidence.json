@@ -1,0 +1,32 @@
+{
+  "public_releases": [
+    {
+      "package": "vendor_sdk",
+      "version": "8.1.4",
+      "timestamp": "2026-06-21T09:06:00Z",
+      "changes": "Refactored network initialization layer. Removed legacy proxy configuration support. Streamlined client connection workflows to rely on external proxy environment variables."
+    },
+    {
+      "package": "express",
+      "version": "4.19.2",
+      "timestamp": "2026-06-20T14:22:00Z",
+      "changes": "Minor maintenance updates tracking standard route header configuration processing loops."
+    }
+  ],
+  "community_issues": [
+    {
+      "issue_id": "482",
+      "title": "After upgrading to v8.1.4 our integrations fail during client initialization. Rollback fixes the issue.",
+      "timestamp": "2026-06-21T09:08:00Z",
+      "traceback_contains": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/482"
+    },
+    {
+      "issue_id": "483",
+      "title": "Migration guide needed for proxy configuration changes.",
+      "timestamp": "2026-06-21T09:45:00Z",
+      "traceback_contains": "proxies parameter deprecation path",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/483"
+    }
+  ]
+}

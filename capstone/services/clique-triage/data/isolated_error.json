@@ -1,0 +1,5 @@
+{
+  "service": "payment_gateway",
+  "exception": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'",
+  "traceback": "[ERROR] Traceback (most recent call last):\n  File \"/workspace/services/node/api-node/src/payment_gateway.py\", line 42, in initialize_client\n    self.client = VendorClient(api_key=self.secret, timeout=30.0, proxies=self.config.get('proxy_routes'))\n  File \"/workspace/services/node/api-node/.venv/lib/python3.11/site-packages/vendor_sdk/client.py\", line 114, in __init__\n    super().__init__(*args, **kwargs)\nTypeError: Client.__init__() got unexpected keyword argument 'proxies'"
+}

@@ -1,0 +1,4 @@
+.DS_Store
+.devbox/
+.venv/
+capstone/services/clique-triage/log_slicer

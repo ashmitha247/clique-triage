@@ -1,0 +1,22 @@
+name: Log Slicer CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: capstone/services/clique-triage
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - run: go build -o log_slicer cmd/log_slicer/main.go
+      - run: ./log_slicer
+      - run: grep -q "TypeError" data/isolated_error.json

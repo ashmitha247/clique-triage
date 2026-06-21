@@ -1,0 +1,12 @@
+[INFO] 2026-06-21T11:45:02Z - Docker base runner engine initialized successfully on ubuntu-24.04 amd64 architecture.
+[INFO] 2026-06-21T11:45:10Z - Mounting local environment cache volumes for npm and poetry run configurations.
+[INFO] 2026-06-21T11:45:12Z - Setting up runtime environment vectors: NODE_ENV=staging, PORT=8080.
+[INFO] 2026-06-21T11:45:25Z - Executing automation workflow step: 'task test'.
+[CRITICAL] 2026-06-21T11:45:34Z - Integration pipeline runner intercepted a fatal transaction validation crash.
+[ERROR] Traceback (most recent call last):
+  File "/workspace/services/node/api-node/src/payment_gateway.py", line 42, in initialize_client
+    self.client = VendorClient(api_key=self.secret, timeout=30.0, proxies=self.config.get('proxy_routes'))
+  File "/workspace/services/node/api-node/.venv/lib/python3.11/site-packages/vendor_sdk/client.py", line 114, in __init__
+    super().__init__(*args, **kwargs)
+TypeError: Client.__init__() got unexpected keyword argument 'proxies'
+[FATAL] 2026-06-21T11:45:35Z - Container execution phase aborted. Step 'task test' terminated with exit code 1.
