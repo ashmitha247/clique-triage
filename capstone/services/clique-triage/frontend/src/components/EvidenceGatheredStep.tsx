@@ -48,8 +48,8 @@ export function EvidenceGatheredStep({ gitSource, ragRetrieval }: EvidenceGather
       {ragRetrieval && (
         <div className="rag-panel phase-card">
           <div className="rag-panel-head">
-            <span className="rag-panel-title">Retrieved from corpus</span>
-            <span className="rag-panel-method">{ragRetrieval.method.replace(/_/g, " + ")}</span>
+            <span className="rag-panel-title">Ranked external signals</span>
+            <span className="rag-panel-method">Release notes & issues</span>
           </div>
           <ul className="rag-hit-list">
             {ragHits.map((hit) => (

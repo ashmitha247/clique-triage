@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import type { GuidedStep, GuidedStepCopy } from "../types/workspace";
+import { ProductAtmosphere } from "./ProductAtmosphere";
 
 interface GuidedShellProps {
-  step: Exclude<GuidedStep, "loading" | "landing" | "done" | "error">;
+  step: Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">;
   copy: GuidedStepCopy;
   onBack: () => void;
   onNext: () => void;
@@ -10,7 +11,10 @@ interface GuidedShellProps {
   children: ReactNode;
 }
 
-const STEP_NUMBERS: Record<Exclude<GuidedStep, "loading" | "landing" | "done" | "error">, number> = {
+const STEP_NUMBERS: Record<
+  Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">,
+  number
+> = {
   step1: 1,
   step2: 2,
   step3: 3,
@@ -22,11 +26,12 @@ export function GuidedShell({ step, copy, onBack, onNext, nextLabel = "Next", ch
 
   return (
     <div className="guided-shell">
+      <ProductAtmosphere />
       <header className="guided-topbar">
         <div className="guided-brand">
           <span className="guided-brand-name">Clique</span>
           <span className="guided-brand-sep">·</span>
-          <span className="guided-brand-value">Know what to investigate first</span>
+          <span className="guided-brand-value">External dependency investigation</span>
         </div>
         <div className="guided-dots" aria-label={`Step ${current} of 4`}>
           {[1, 2, 3, 4].map((n) => (

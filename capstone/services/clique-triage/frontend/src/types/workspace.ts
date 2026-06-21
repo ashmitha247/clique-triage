@@ -171,8 +171,20 @@ export interface TransformedWorkspace {
   };
 }
 
-/** Guided walkthrough — user clicks Next/Back through 4 steps. */
-export type GuidedStep = "loading" | "landing" | "step1" | "step2" | "step3" | "step4" | "done" | "error";
+/** Guided walkthrough — demo mode prepends intro → research → workflow → architecture. */
+export type GuidedStep =
+  | "loading"
+  | "error"
+  | "intro"
+  | "research"
+  | "workflow"
+  | "architecture"
+  | "landing"
+  | "step1"
+  | "step2"
+  | "step3"
+  | "step4"
+  | "done";
 
 export const GUIDED_STEP_COUNT = 4;
 
@@ -182,21 +194,24 @@ export interface GuidedStepCopy {
   caption?: string;
 }
 
-export const GUIDED_STEP_COPY: Record<Exclude<GuidedStep, "loading" | "landing" | "done" | "error">, GuidedStepCopy> = {
+export const GUIDED_STEP_COPY: Record<
+  Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">,
+  GuidedStepCopy
+> = {
   step1: {
     title: "Your build failed",
     subtitle: "Here's the error from your CI pipeline.",
     caption: "Most tools stop here. Clique starts here.",
   },
   step2: {
-    title: "Clique gathered evidence from 4 places",
-    subtitle: "Logs, git history, package releases, and community reports — searched together.",
-    caption: "Hybrid RAG retrieval ranks the most relevant documents from the corpus.",
+    title: "Evidence gathered from 4 places",
+    subtitle: "Logs, git history, package releases, and community reports — matched together.",
+    caption: "Release notes and issues ranked by relevance to this failure.",
   },
   step3: {
-    title: "Clique ruled out what doesn't matter",
+    title: "Ruled out what doesn't matter",
     subtitle: "12 signals examined. Most were noise.",
-    caption: "The value isn't finding the answer — it's narrowing the search space.",
+    caption: "The value isn't finding the answer — it's narrowing where to look.",
   },
   step4: {
     title: "Start here",

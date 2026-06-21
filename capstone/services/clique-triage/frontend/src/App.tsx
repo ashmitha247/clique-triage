@@ -1,5 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { IntroScreen } from "./components/demo/IntroScreen";
+import { ArchitectureScreen } from "./components/demo/ArchitectureScreen";
+import { CurrentWorkflowScreen } from "./components/demo/CurrentWorkflowScreen";
+import { ResearchScreen } from "./components/demo/ResearchScreen";
 import { EvidenceGatheredStep } from "./components/EvidenceGatheredStep";
 import { EliminationStep } from "./components/EliminationStep";
 import { FailureStep } from "./components/FailureStep";
@@ -13,19 +17,29 @@ import "./styles/globals.css";
 
 type ActiveStep = Exclude<GuidedStep, "loading" | "error">;
 
-const STEP_ORDER: ActiveStep[] = ["landing", "step1", "step2", "step3", "step4", "done"];
-
-function nextStep(current: ActiveStep): ActiveStep {
-  const index = STEP_ORDER.indexOf(current);
-  return STEP_ORDER[Math.min(index + 1, STEP_ORDER.length - 1)] ?? current;
+function buildStepOrder(demoMode: boolean): ActiveStep[] {
+  const product: ActiveStep[] = ["landing", "step1", "step2", "step3", "step4", "done"];
+  if (!demoMode) return product;
+  return ["intro", "research", "workflow", "architecture", ...product];
 }
 
-function prevStep(current: ActiveStep): ActiveStep {
-  const index = STEP_ORDER.indexOf(current);
-  return STEP_ORDER[Math.max(index - 1, 0)] ?? current;
+function nextStep(current: ActiveStep, order: ActiveStep[]): ActiveStep {
+  const index = order.indexOf(current);
+  return order[Math.min(index + 1, order.length - 1)] ?? current;
+}
+
+function prevStep(current: ActiveStep, order: ActiveStep[]): ActiveStep {
+  const index = order.indexOf(current);
+  return order[Math.max(index - 1, 0)] ?? current;
 }
 
 export default function App() {
+  const demoMode = useMemo(
+    () => new URLSearchParams(window.location.search).has("demo"),
+    [],
+  );
+  const stepOrder = useMemo(() => buildStepOrder(demoMode), [demoMode]);
+
   const [step, setStep] = useState<GuidedStep>("loading");
   const [data, setData] = useState<TransformedWorkspace | null>(null);
 
@@ -33,19 +47,21 @@ export default function App() {
     fetchWorkspace()
       .then((workspace) => {
         setData(transformWorkspace(workspace));
-        setStep("landing");
+        setStep(demoMode ? "intro" : "landing");
       })
       .catch(() => setStep("error"));
-  }, []);
+  }, [demoMode]);
 
   const handleStart = useCallback(() => setStep("step1"), []);
   const handleNext = useCallback(() => {
-    setStep((current) => nextStep(current as ActiveStep));
-  }, []);
+    setStep((current) => nextStep(current as ActiveStep, stepOrder));
+  }, [stepOrder]);
   const handleBack = useCallback(() => {
-    setStep((current) => prevStep(current as ActiveStep));
-  }, []);
-  const handleRestart = useCallback(() => setStep("landing"), []);
+    setStep((current) => prevStep(current as ActiveStep, stepOrder));
+  }, [stepOrder]);
+  const handleRestart = useCallback(() => {
+    setStep(demoMode ? "intro" : "landing");
+  }, [demoMode]);
 
   if (step === "loading") {
     return (
@@ -68,10 +84,70 @@ export default function App() {
     );
   }
 
+  const isPrelude =
+    demoMode &&
+    (step === "intro" || step === "research" || step === "workflow" || step === "architecture");
+  const isLandingDemo = demoMode && step === "landing";
+  const isProductPhase =
+    step === "step1" || step === "step2" || step === "step3" || step === "step4" || step === "done" ||
+    (!demoMode && step === "landing");
+
   return (
     <div className="session-shell">
-      <div className="session">
+      <div className="ambient-glow ambient-glow-a" aria-hidden />
+      <div className="ambient-glow ambient-glow-b" aria-hidden />
+      <div
+        className={`session${isPrelude ? " session-presentation" : ""}${isLandingDemo ? " session-landing-demo" : ""}${isProductPhase ? " session-product" : ""}`}
+      >
         <AnimatePresence mode="wait">
+          {step === "intro" && (
+            <motion.div
+              key="intro"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+            >
+              <IntroScreen onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "research" && (
+            <motion.div
+              key="research"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+            >
+              <ResearchScreen onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "workflow" && (
+            <motion.div
+              key="workflow"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+            >
+              <CurrentWorkflowScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "architecture" && (
+            <motion.div
+              key="architecture"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.35 }}
+            >
+              <ArchitectureScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
           {step === "landing" && (
             <motion.div
               key="landing"
@@ -80,7 +156,7 @@ export default function App() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.35 }}
             >
-              <LandingScreen onStart={handleStart} />
+              <LandingScreen onStart={handleStart} demoMode={demoMode} />
             </motion.div>
           )}
 

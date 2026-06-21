@@ -48,11 +48,14 @@ cp data/investigation_workspace.json frontend/public/investigation_workspace.jso
 
 echo "[5/5] Starting Vite dev server..."
 echo ""
-echo "  Open: http://localhost:5173"
+echo "  Judge demo:  http://localhost:5173/?demo=1"
+echo "  Product:     http://localhost:5173/"
 echo ""
-echo "  WSL fallback (if localhost hangs):"
+echo "  From Windows, use localhost — NOT 10.255.255.254 (often times out)."
 WSL_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
-echo "    http://${WSL_IP:-127.0.0.1}:5173"
+if [[ -n "$WSL_IP" ]]; then
+  echo "  WSL fallback (if localhost hangs): http://${WSL_IP}:5173/?demo=1"
+fi
 echo "=========================================="
 echo ""
 
@@ -67,4 +70,14 @@ if [[ ! -d node_modules ]]; then
   npm install
 fi
 
-exec npm run dev -- --host 0.0.0.0 --port 5173
+# Keep port 5173 predictable — kill leftover Vite from a previous run-dev.sh
+if command -v lsof >/dev/null 2>&1; then
+  OLD_PIDS="$(lsof -t -i:5173 -sTCP:LISTEN 2>/dev/null || true)"
+  if [[ -n "$OLD_PIDS" ]]; then
+    echo "Stopping stale dev server on port 5173..."
+    kill $OLD_PIDS 2>/dev/null || true
+    sleep 1
+  fi
+fi
+
+exec npm run dev -- --host 0.0.0.0 --port 5173 --strictPort

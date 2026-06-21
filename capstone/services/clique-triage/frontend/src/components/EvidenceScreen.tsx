@@ -15,7 +15,7 @@ export function EvidenceScreen({ signals }: EvidenceScreenProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="focus-label">Why we think this</div>
+        <div className="focus-label">Why this lead</div>
         <MatchSignals signals={signals} />
       </motion.div>
     </div>

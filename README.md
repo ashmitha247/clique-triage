@@ -65,6 +65,8 @@ bash run-dev.sh
 
 Open [http://localhost:5173](http://localhost:5173) → **Start investigation** → click **Next** through 4 steps.
 
+**Judge demo (InnovateZ video):** [http://localhost:5173/?demo=1](http://localhost:5173/?demo=1) — 3-act flow: maintainer research → architecture → product walkthrough.
+
 ### Deploy demo (Vercel)
 
 ```bash

@@ -23,7 +23,10 @@ Engineers still manually jump between CI logs, git history, manifests, release n
 Tools like Dependabot already answer *“What updated?”*  
 They do **not** answer *“Could that update explain the build I’m staring at right now?”*
 
-Both maintainers we spoke with confirmed that gap. We label them **Maintainer A** and **Maintainer B** below (anonymous until we have permission to name them publicly).
+Both maintainers we spoke with confirmed that gap:
+
+- **Huda Naaz** — maintainer of **kuberef**; CNCF open source contributor (DevOps/Python)
+- **Ajeet** — maintainer of **Open Sox**
 
 That gap is Clique.
 
@@ -35,14 +38,14 @@ Two LinkedIn conversations with active maintainers **informed** the thesis — s
 
 **If a judge asks “which maintainers?” — keep it simple:**
 
-| | **Maintainer A** | **Maintainer B** |
-|---|------------------|------------------|
-| **Who** | Contributor to CNCF ecosystem tooling | Engineer responsible for production deployments |
+| | **Huda Naaz** | **Ajeet** |
+|---|---------------|-----------|
+| **Who** | Maintainer of kuberef; CNCF ecosystem contributor | Maintainer of Open Sox |
 | **Relevant because** | Sees upstream dependency breaks in CI | Operates the full deploy loop day-to-day |
 
 Do **not** say “industry validation” or “market research” with two interviews. Say: *“Two early conversations pointed us at the investigation gap; the demo shows the workflow we built from that.”*
 
-### Maintainer A — CNCF / kuberef (DevOps / Python)
+### Huda Naaz — CNCF / kuberef (DevOps / Python)
 
 | Topic | What she said |
 |-------|---------------|
@@ -51,7 +54,7 @@ Do **not** say “industry validation” or “market research” with two inter
 | **What automation covers** | CI failure alerts and lockfiles can surface *that* something updated — but: “figuring out the root cause and connecting the update to breaking change/runtime behaviour can be time consuming.” |
 | **Where she looks** | Internal logs and tracebacks in the pipeline **or** direct resources — “Slack, Discord, SO, Github Issues/Releases.” |
 
-### Maintainer B — full-stack production deployer
+### Ajeet — Open Sox maintainer
 
 | Topic | What they said |
 |-------|----------------|
@@ -62,13 +65,13 @@ Do **not** say “industry validation” or “market research” with two inter
 | **Ideal UI** | “small blocks, each block shows logs of one particular service.” |
 | **Dependabot** | Uses GitHub dependency bot for outdated deps — but it does not connect an update to a specific failure. |
 
-**Maintainer A (direct):**
+**Huda Naaz (direct):**
 
 > When a clean PR breaks out of nowhere, it is an indicator in itself to look at recent external update logs.
 
 > figuring out the root cause and connecting the update to breaking change/runtime behaviour can be time consuming.
 
-**Maintainer B (direct):**
+**Ajeet (direct):**
 
 > Finding the issue is always the most time taking part.
 
@@ -76,13 +79,13 @@ Do **not** say “industry validation” or “market research” with two inter
 
 | Thesis | Validated? | Evidence |
 |--------|------------|----------|
-| **Detecting updates** is the product | ❌ No | Dependabot, Renovate, CI failure alerts, and lockfiles already exist. The full-stack deployer maintainer uses the dependency bot but it does not fix the investigation. |
-| **Connecting an update to a failure** is time-consuming | ✅ Yes | CNCF/kuberef maintainer: root cause + runtime linkage is “time consuming.” Full-stack deployer maintainer: “Finding the issue is always the most time taking part.” |
-| **Multi-source investigation** is normal | ✅ Yes | Pipeline logs/tracebacks **plus** Slack, Discord, Stack Overflow, GitHub Issues/Releases (CNCF/kuberef maintainer). |
-| **Cursor helps locally** but does not replace external investigation | ✅ Yes | Full-stack deployer maintainer uses Cursor when repo context is in reach; external/community sources still matter for non-obvious dependency failures. |
-| **Every build needs triage** | ❌ No | Full-stack deployer maintainer: external breaks are rare; backward compatibility is common. **Clique targets the investigation-heavy cases** — clean PR breaks, traceback + timeline mismatch, multi-source hunt — not every green-to-red notification. |
+| **Detecting updates** is the product | ❌ No | Dependabot, Renovate, CI failure alerts, and lockfiles already exist. Ajeet uses the dependency bot but it does not fix the investigation. |
+| **Connecting an update to a failure** is time-consuming | ✅ Yes | Huda Naaz (kuberef): root cause + runtime linkage is “time consuming.” Ajeet: “Finding the issue is always the most time taking part.” |
+| **Multi-source investigation** is normal | ✅ Yes | Pipeline logs/tracebacks **plus** Slack, Discord, Stack Overflow, GitHub Issues/Releases (Huda Naaz). |
+| **Cursor helps locally** but does not replace external investigation | ✅ Yes | Ajeet uses Cursor when repo context is in reach; external/community sources still matter for non-obvious dependency failures. |
+| **Every build needs triage** | ❌ No | Ajeet: external breaks are rare; backward compatibility is common. **Clique targets the investigation-heavy cases** — clean PR breaks, traceback + timeline mismatch, multi-source hunt — not every green-to-red notification. |
 
-**UI nuance:** The full-stack deployer maintainer’s “small blocks per service” is a **future dashboard direction**. Today’s demo is an **investigation replay** (one ranked lead at a time), not a multi-service log wall — by design for the hackathon narrative.
+**UI nuance:** Ajeet’s “small blocks per service” is a **future dashboard direction**. Today’s demo is an **investigation replay** (one ranked lead at a time), not a multi-service log wall — by design for the hackathon narrative.
 
 ---
 
@@ -406,10 +409,10 @@ Signals that put a failure in that bucket:
 | Clean PR breaks with no obvious local cause | Green main → red on docs-only adjacent change |
 | Traceback points at a **dependency**, not app code | `site-packages/vendor_sdk/client.py` |
 | Timeline mismatch | Release or issue predates the failure by hours, not the commit that touched app code |
-| Multi-source hunt | Maintainer A: logs **plus** Slack, Discord, SO, GitHub Issues/Releases |
+| Multi-source hunt | Huda Naaz: logs **plus** Slack, Discord, SO, GitHub Issues/Releases |
 
-Maintainer B (full-stack): external breaks are **rare** — backward compatibility is common.  
-Maintainer A (CNCF): upstream Python/K8s deps can break CI **more often**.
+Ajeet (Open Sox): external breaks are **rare** — backward compatibility is common.  
+Huda Naaz (kuberef): upstream Python/K8s deps can break CI **more often**.
 
 Clique is not for every red build. It’s for the ones where investigation time dominates debugging time.
 
@@ -419,13 +422,15 @@ Clique is not for every red build. It’s for the ones where investigation time 
 
 | Question | Answer |
 |----------|--------|
-| Did you talk to real users? | Yes — **Maintainer A** (CNCF/kuberef, DevOps/Python) and **Maintainer B** (full-stack production deployer). See table above. Anonymous until we have naming permission. |
-| **How often does this happen?** | **Not every failure.** Most are syntax errors, missing env vars, or failed unit tests — Cursor handles those. Clique targets the **expensive minority**: clean PR breaks, traceback + timeline mismatch, multi-source hunts where engineers must leave the repo and gather external evidence before forming a hypothesis. Maintainer B said external breaks are rare; Maintainer A sees them more in fast-moving deps. |
+| Did you talk to real users? | Yes — **Huda Naaz** (kuberef, CNCF/DevOps/Python) and **Ajeet** (Open Sox maintainer). See table above. |
+| **How often does this happen?** | **Not every failure.** Most are syntax errors, missing env vars, or failed unit tests — Cursor handles those. Clique targets the **expensive minority**: clean PR breaks, traceback + timeline mismatch, multi-source hunts where engineers must leave the repo and gather external evidence before forming a hypothesis. Ajeet said external breaks are rare; Huda sees them more in fast-moving deps. |
 | Why “Investigation Triage” not “AI-Assisted”? | MVP is deterministic. No Gemini in the demo. AI summarizes **already-ranked** evidence on the roadmap. |
 | Where’s the AI? | MVP ranks deterministically. Gemini summarizes ranked evidence next (RAG course). |
 | Where’s RAG? | Roadmap replaces fixtures with BM25 + embedding retrieval (Hoopla pipeline). |
 | Why not Dependabot? | They notify updates; we investigate a **specific failure**. |
 | Why not Cursor / Copilot / Claude with the log pasted? | Before you ask Cursor for a fix, you need to know what evidence matters. **Cursor helps solve a problem. Clique helps define the problem.** |
+| **Why not Cursor + web search on the log?** | Often **70–90% there in one session** with good prompting. Missing: auditable elimination, repeatable packet, same answer on the next build. **Clique → Cursor** automates the hunt first, then you fix — roadmap: CI trigger + MCP. |
+| **Why not skip Clique and go straight to Cursor?** | For in-repo bugs, yes. Clique is for clean-PR / upstream breaks: replaces tab-hopping with automatic collection + rule-out, then hands Cursor a focused packet. |
 | Why ranking? I'll search GitHub myself. | Finding info is easy. **Deciding what deserves attention** when there are dozens of signals is hard. Point to: 12 examined → 3 ranked → 1 lead. |
 | Is this the root cause? | No — **most likely investigation lead** + supporting evidence. We rank; humans investigate and decide. |
 | Isn’t the demo rigged? | Fixtures for reproducibility. Value = elimination workflow, not oracle retrieval. See section above. |
@@ -480,6 +485,6 @@ Practical ordered checklist before/during submission:
 1. **Repo credibility** — commit + push frontend, PITCH.md, run-dev.sh (if not done)
 2. **Demo path** — run-dev.sh → localhost:5173, NOT Streamlit
 3. **60-second pitch script** — problem (30s) → click Investigate → **elimination sidebar** → **investigation lead** (not hypothesis)
-4. **Judge slides order** — Problem → **Elimination panel (strongest slide)** → Maintainer A/B (supporting, not proof) → How often? → MVP demo → Roadmap → Cursor handoff
+4. **Judge slides order** — Problem → **Elimination panel (strongest slide)** → Huda + Ajeet (supporting, not proof) → How often? → MVP demo → Roadmap → Cursor handoff
 5. **Optional before judging** — ask maintainers permission to name them later; wire workflow_run Actions artifact (roadmap slide only if not built)
 6. **What NOT to claim** — RAG/Gemini live in demo; say roadmap
