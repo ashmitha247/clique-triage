@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """
-Clique Triage Engine — deterministic heuristic core.
+Clique Triage Engine — heuristic core + hybrid RAG retrieval.
 
-Reads isolated build errors, external evidence, and recent git activity;
-prunes noise, ranks investigation leads, and writes a pre-sorted workspace
-payload for downstream UI rendering. No LLM calls in this phase.
+Reads isolated build errors, RAG-indexed external evidence, and recent git
+activity; prunes noise, ranks investigation leads, and writes a pre-sorted
+workspace payload for downstream UI rendering.
+
+RAG layer: BM25 + TF-IDF + reciprocal rank fusion over mock_internet/rag_corpus.json
+Git/elimination rules remain deterministic guardrails on top of retrieval.
 """
 
 from __future__ import annotations
@@ -17,17 +20,21 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from rag.retriever import HybridRetriever, RetrievalHit, build_rag_query
+
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = BASE_DIR / "data"
 MOCK_INTERNET_DIR = BASE_DIR / "mock_internet"
 
 ISOLATED_ERROR_PATH = DATA_DIR / "isolated_error.json"
 EXTERNAL_EVIDENCE_PATH = MOCK_INTERNET_DIR / "external_evidence.json"
+RAG_CORPUS_PATH = MOCK_INTERNET_DIR / "rag_corpus.json"
 FAILED_BUILD_LOG_PATH = DATA_DIR / "failed_build.log"
 GIT_LOG_FIXTURE_PATH = DATA_DIR / "git_log_fixture.json"
 OUTPUT_PATH = DATA_DIR / "investigation_workspace.json"
 
 TEMPORAL_PROXIMITY_HOURS = 6
+RAG_TOP_K = 6
 
 ELIMINATED_EXTENSIONS = {".css", ".md"}
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".bmp", ".tiff"}
@@ -133,6 +140,99 @@ def score_community_issues(
             )
 
     return priority_leads
+
+
+def release_within_temporal_window(
+    release_timestamp: str,
+    build_failure_timestamp: str,
+) -> tuple[bool, float | None]:
+    failure_time = parse_iso_timestamp(build_failure_timestamp)
+    window_start = failure_time - timedelta(hours=TEMPORAL_PROXIMITY_HOURS)
+    release_time = parse_iso_timestamp(release_timestamp)
+
+    if release_time < window_start or release_time > failure_time:
+        return False, None
+
+    delta = failure_time - release_time
+    return True, round(delta.total_seconds() / 3600, 2)
+
+
+def leads_from_rag_hits(
+    hits: list[RetrievalHit],
+    build_failure_timestamp: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    community_leads: list[dict[str, Any]] = []
+    release_leads: list[dict[str, Any]] = []
+
+    for hit in hits:
+        if hit.source_type == "noise":
+            continue
+
+        if hit.source_type == "community_issue":
+            community_leads.append(
+                {
+                    "type": "community_issue",
+                    "strength": "high",
+                    "reason": f"RAG hybrid retrieval (RRF={hit.rrf_score})",
+                    "issue_id": hit.metadata.get("issue_id"),
+                    "title": hit.metadata.get("title", hit.snippet),
+                    "timestamp": hit.metadata.get("timestamp"),
+                    "url": hit.metadata.get("url"),
+                    "traceback_match": hit.snippet,
+                    "rag_doc_id": hit.doc_id,
+                    "rag_score": hit.rrf_score,
+                }
+            )
+            continue
+
+        if hit.source_type == "package_release":
+            release_ts = hit.metadata.get("timestamp", "")
+            in_window, hours_before = release_within_temporal_window(release_ts, build_failure_timestamp)
+            if not in_window:
+                continue
+
+            release_leads.append(
+                {
+                    "type": "package_release",
+                    "strength": "high",
+                    "reason": f"RAG hybrid retrieval + temporal proximity (RRF={hit.rrf_score})",
+                    "package": hit.metadata.get("package"),
+                    "version": hit.metadata.get("version"),
+                    "released_at": release_ts,
+                    "changes": hit.snippet,
+                    "hours_before_failure": hours_before,
+                    "rag_doc_id": hit.doc_id,
+                    "rag_score": hit.rrf_score,
+                }
+            )
+
+    return community_leads, release_leads
+
+
+def run_rag_retrieval(isolated_error: dict[str, Any]) -> tuple[list[RetrievalHit], str]:
+    retriever = HybridRetriever.from_corpus_file(RAG_CORPUS_PATH)
+    query = build_rag_query(isolated_error)
+    hits = retriever.search(query, top_k=RAG_TOP_K)
+    return hits, query
+
+
+def rag_hits_to_payload(hits: list[RetrievalHit], query: str) -> dict[str, Any]:
+    return {
+        "query": query,
+        "method": "hybrid_bm25_tfidf_rrf",
+        "top_k": RAG_TOP_K,
+        "hits": [
+            {
+                "doc_id": hit.doc_id,
+                "source_type": hit.source_type,
+                "rrf_score": hit.rrf_score,
+                "bm25_rank": hit.bm25_rank,
+                "tfidf_rank": hit.tfidf_rank,
+                "snippet": hit.snippet,
+            }
+            for hit in hits
+        ],
+    }
 
 
 def score_package_releases(
@@ -343,6 +443,9 @@ def build_investigation_workspace() -> dict[str, Any]:
 
     build_failure_timestamp = extract_build_failure_timestamp()
 
+    rag_hits, rag_query = run_rag_retrieval(isolated_error)
+    rag_community_leads, rag_release_leads = leads_from_rag_hits(rag_hits, build_failure_timestamp)
+
     traceback_leads = extract_traceback_source_leads(isolated_error)
     community_leads = score_community_issues(isolated_error, external_evidence)
     release_leads = score_package_releases(build_failure_timestamp, external_evidence)
@@ -352,6 +455,8 @@ def build_investigation_workspace() -> dict[str, Any]:
 
     priority_leads = merge_priority_leads(
         traceback_leads,
+        rag_community_leads,
+        rag_release_leads,
         community_leads,
         release_leads,
         repository_leads,
@@ -362,6 +467,7 @@ def build_investigation_workspace() -> dict[str, Any]:
         "isolated_exception": isolated_error.get("exception"),
         "isolated_service": isolated_error.get("service"),
         "git_source": git_source,
+        "rag_retrieval": rag_hits_to_payload(rag_hits, rag_query),
         "priority_leads": priority_leads,
         "discarded": discarded,
     }
@@ -373,6 +479,7 @@ def main() -> int:
         for path in (
             ISOLATED_ERROR_PATH,
             EXTERNAL_EVIDENCE_PATH,
+            RAG_CORPUS_PATH,
             FAILED_BUILD_LOG_PATH,
             GIT_LOG_FIXTURE_PATH,
         )
@@ -388,7 +495,8 @@ def main() -> int:
 
     print(
         "✓ Triage engine complete. "
-        f"Ranked {len(workspace['priority_leads'])} priority leads and "
+        f"RAG retrieved {len(workspace['rag_retrieval']['hits'])} chunks; "
+        f"ranked {len(workspace['priority_leads'])} priority leads and "
         f"discarded {len(workspace['discarded'])} non-functional commit signals."
     )
     print(f"✓ Investigation workspace saved to {OUTPUT_PATH}")

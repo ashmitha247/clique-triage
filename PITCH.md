@@ -1,5 +1,7 @@
-# Clique — AI-Assisted Incident Triage Workspace
+# Clique — Investigation Triage Workspace
 **Hackathon pitch · MVP vs roadmap · Judge handout**
+
+*Not “AI-Assisted” in the MVP — ranking and elimination are deterministic. AI synthesis is roadmap (RAG course).*
 
 ---
 
@@ -21,7 +23,7 @@ Engineers still manually jump between CI logs, git history, manifests, release n
 Tools like Dependabot already answer *“What updated?”*  
 They do **not** answer *“Could that update explain the build I’m staring at right now?”*
 
-Both maintainers we spoke with — an **open source maintainer of kuberef and other CNCF projects** (DevOps/Python) and an **open source maintainer of his own project** (Vercel/Railway deploy workflow) — confirmed that gap. Details below.
+Both maintainers we spoke with confirmed that gap. We label them **Maintainer A** and **Maintainer B** below (anonymous until we have permission to name them publicly).
 
 That gap is Clique.
 
@@ -29,9 +31,18 @@ That gap is Clique.
 
 ## Validated by maintainers
 
-Two LinkedIn conversations with active maintainers shaped the thesis. We did not invent the problem from a demo scenario alone.
+Two LinkedIn conversations with active maintainers **informed** the thesis — supporting evidence, not market research. We did not invent the problem from a demo scenario alone.
 
-### Open source maintainer — kuberef and other CNCF projects (DevOps / Python)
+**If a judge asks “which maintainers?” — keep it simple:**
+
+| | **Maintainer A** | **Maintainer B** |
+|---|------------------|------------------|
+| **Who** | Contributor to CNCF ecosystem tooling | Engineer responsible for production deployments |
+| **Relevant because** | Sees upstream dependency breaks in CI | Operates the full deploy loop day-to-day |
+
+Do **not** say “industry validation” or “market research” with two interviews. Say: *“Two early conversations pointed us at the investigation gap; the demo shows the workflow we built from that.”*
+
+### Maintainer A — CNCF / kuberef (DevOps / Python)
 
 | Topic | What she said |
 |-------|---------------|
@@ -40,7 +51,7 @@ Two LinkedIn conversations with active maintainers shaped the thesis. We did not
 | **What automation covers** | CI failure alerts and lockfiles can surface *that* something updated — but: “figuring out the root cause and connecting the update to breaking change/runtime behaviour can be time consuming.” |
 | **Where she looks** | Internal logs and tracebacks in the pipeline **or** direct resources — “Slack, Discord, SO, Github Issues/Releases.” |
 
-### Open source maintainer — his own full-stack project (Vercel / Railway)
+### Maintainer B — full-stack production deployer
 
 | Topic | What they said |
 |-------|----------------|
@@ -51,13 +62,13 @@ Two LinkedIn conversations with active maintainers shaped the thesis. We did not
 | **Ideal UI** | “small blocks, each block shows logs of one particular service.” |
 | **Dependabot** | Uses GitHub dependency bot for outdated deps — but it does not connect an update to a specific failure. |
 
-**CNCF / kuberef maintainer (direct):**
+**Maintainer A (direct):**
 
 > When a clean PR breaks out of nowhere, it is an indicator in itself to look at recent external update logs.
 
 > figuring out the root cause and connecting the update to breaking change/runtime behaviour can be time consuming.
 
-**Full-stack deployer maintainer (direct):**
+**Maintainer B (direct):**
 
 > Finding the issue is always the most time taking part.
 
@@ -112,8 +123,12 @@ Cursor explains the constructor. The engineer asks: *“Why today? Nobody touche
 Now they need release notes, issues, dependency timelines, and elimination of unrelated commits. **That’s Clique.**
 
 **Handoff:**  
-Clique → *“Likely related to vendor_sdk v8.1.4 removing proxy support.”*  
+Clique → *“Most likely investigation lead: vendor_sdk v8.1.4 release — start here.”*  
 Cursor → *“How should I update payment_gateway.py for the new API?”*
+
+**One-line defense (Copilot / Cursor / Claude + pasted log):**
+
+> Before I can ask Cursor for a fix, I first have to know what evidence matters. **Cursor helps solve a problem. Clique helps define the problem.**
 
 ---
 
@@ -121,6 +136,12 @@ Cursor → *“How should I update payment_gateway.py for the new API?”*
 
 You can — **after** you collect logs, release notes, issues, and timelines.  
 Gathering and organizing that context is the expensive part. Clique automates **evidence assembly before the AI conversation**.
+
+**Why ranking? Why not just search GitHub yourself?**
+
+> The challenge isn’t finding information. It’s deciding **which information deserves attention** when there are dozens of possible signals.
+
+Then point at the elimination panel: **12 examined → 3 ranked → 1 lead.**
 
 ---
 
@@ -150,7 +171,7 @@ Browser @ localhost:5173
 | LLM synthesis | **Gemini** over ranked JSON | 🔜 Roadmap (RAG course) |
 | Failure-triggered CI pipeline | Actions on `workflow_failure` | 🔜 Roadmap (Actions course) |
 
-**Critical honesty:** The MVP is a **deterministic investigation replay**. Same inputs → same ranked workspace. No hallucinated leads.
+**Critical honesty:** The MVP is **deterministic and explainable**. Every ranking decision traces back to visible evidence — traceback overlap, file type, temporal proximity, dependency chain. No hallucinated leads.
 
 ---
 
@@ -262,10 +283,63 @@ Four pillars classify evidence **in the engine**. The UI shows **one replay step
 
 # Demo scenario (memorize this)
 
+## Strongest slide (lead with this)
+
+Not architecture. Not the tech stack. **The elimination panel:**
+
+```text
+Evidence examined: 12
+
+Discarded:
+✗ checkout.css
+✗ README.md
+✗ express release
+
+Deprioritized:
+− payment_gateway.py
+
+Ranked:
+✓ vendor_sdk release
+✓ Issue #482
+✓ Issue #483
+```
+
+A judge immediately gets: *“The system isn’t magically finding the answer. It’s narrowing the search space.”*  
+That works for non-engineers too.
+
+---
+
 **Failure:**
 
 ```text
 TypeError: Client.__init__() got unexpected keyword argument 'proxies'
+```
+
+**The story judges should remember — not “it found the answer,” but “it ruled out the noise”:**
+
+```text
+Evidence examined: 12
+
+Discarded:
+✗ checkout.css          (styling-only commit)
+✗ README.md             (documentation-only)
+✗ express 4.21.0        (not in dependency chain)
+
+Deprioritized:
+− payment_gateway.py    (stable across 14 builds)
+
+Ranked:
+✓ vendor_sdk v8.1.4 release
+✓ Issue #482
+✓ Issue #483 (similar report)
+
+→ Most likely investigation lead:
+  vendor_sdk v8.1.4 release
+
+  Supporting evidence:
+  • Issue #482
+  • Issue #483
+  • Timing correlation
 ```
 
 **After “Investigate” — replay beats:**
@@ -273,13 +347,25 @@ TypeError: Client.__init__() got unexpected keyword argument 'proxies'
 1. Parsing build logs → exception extracted (red pulse)
 2. Dependency chain → `vendor_sdk → httpx → client.py`
 3. Ecosystem signals → release notes, issue #482, community match
-4. **Elimination (hero moment)** → `checkout.css` ✗, `README.md` ✗, `payment_gateway.py` deprioritized
+4. **Elimination (hero moment)** — sidebar fills with discarded items; ranked list stays visible
 5. Connections → Community Issue #482 glows
-6. Verdict → `vendor_sdk v8.1.4` removed legacy proxy support
+6. **Most likely investigation lead** → `vendor_sdk v8.1.4 release` + supporting evidence bullets
 7. Evidence strength → match signal bars
 8. Timeline → Release → Issue → Build Failed → Investigation Generated
 
-**60-second version:** Trigger → parsing → one elimination → constellation glow → verdict. Mention full replay exists in repo.
+**60-second version:** Trigger → parsing → **elimination sidebar filling up** → constellation glow → investigation lead. Say out loud: *“Here’s where I’d spend the next 15 minutes — not ‘we found root cause.’”*
+
+---
+
+## “Isn’t this planted evidence?” (judge attack — prepare for this)
+
+Yes, the demo uses **fixtures** for reproducibility. Acknowledge it directly.
+
+Then pivot immediately:
+
+> “The product value isn’t magic retrieval. It’s **structured elimination**. In a real run, Clique examines git commits, lockfile diffs, release feeds, and issue search results — and discards the majority before ranking what’s left.”
+
+The elimination panel is the antidote to “of course it found it.” Show **12 examined → 3 discarded → 1 deprioritized → 3 ranked → 1 lead**.
 
 ---
 
@@ -295,16 +381,54 @@ Requires: Python 3, Go (optional fallback to fixture JSON), Node 20 in WSL.
 
 ---
 
+# How often does this happen? (the judge killer question)
+
+Judges may not ask “does the tech work?” — they ask **“how many failures actually need this workflow?”**
+
+**Wrong answer:** “Every build failure.”  
+That’s false. Most failures are:
+
+```text
+Syntax error
+Missing env variable
+Failed unit test
+Local bug Cursor can fix in-repo
+```
+
+**Right answer:**
+
+> Clique targets the **expensive minority** of failures where engineers must **leave the repository** and gather **external evidence** before forming a hypothesis.
+
+Signals that put a failure in that bucket:
+
+| Signal | Example |
+|--------|---------|
+| Clean PR breaks with no obvious local cause | Green main → red on docs-only adjacent change |
+| Traceback points at a **dependency**, not app code | `site-packages/vendor_sdk/client.py` |
+| Timeline mismatch | Release or issue predates the failure by hours, not the commit that touched app code |
+| Multi-source hunt | Maintainer A: logs **plus** Slack, Discord, SO, GitHub Issues/Releases |
+
+Maintainer B (full-stack): external breaks are **rare** — backward compatibility is common.  
+Maintainer A (CNCF): upstream Python/K8s deps can break CI **more often**.
+
+Clique is not for every red build. It’s for the ones where investigation time dominates debugging time.
+
+---
+
 # Judge Q&A cheat sheet
 
 | Question | Answer |
 |----------|--------|
-| Did you talk to real users? | Yes — an **open source maintainer of kuberef and other CNCF projects** (DevOps/Python) and an **open source maintainer of his own project** (Vercel/Railway deploy workflow). See **Validated by maintainers** above. |
+| Did you talk to real users? | Yes — **Maintainer A** (CNCF/kuberef, DevOps/Python) and **Maintainer B** (full-stack production deployer). See table above. Anonymous until we have naming permission. |
+| **How often does this happen?** | **Not every failure.** Most are syntax errors, missing env vars, or failed unit tests — Cursor handles those. Clique targets the **expensive minority**: clean PR breaks, traceback + timeline mismatch, multi-source hunts where engineers must leave the repo and gather external evidence before forming a hypothesis. Maintainer B said external breaks are rare; Maintainer A sees them more in fast-moving deps. |
+| Why “Investigation Triage” not “AI-Assisted”? | MVP is deterministic. No Gemini in the demo. AI summarizes **already-ranked** evidence on the roadmap. |
 | Where’s the AI? | MVP ranks deterministically. Gemini summarizes ranked evidence next (RAG course). |
 | Where’s RAG? | Roadmap replaces fixtures with BM25 + embedding retrieval (Hoopla pipeline). |
 | Why not Dependabot? | They notify updates; we investigate a **specific failure**. |
-| Why not Cursor? | Repo intelligence vs external investigation intelligence — complementary. |
-| Is this the root cause? | No — ranked leads + explicit eliminations. |
+| Why not Cursor / Copilot / Claude with the log pasted? | Before you ask Cursor for a fix, you need to know what evidence matters. **Cursor helps solve a problem. Clique helps define the problem.** |
+| Why ranking? I'll search GitHub myself. | Finding info is easy. **Deciding what deserves attention** when there are dozens of signals is hard. Point to: 12 examined → 3 ranked → 1 lead. |
+| Is this the root cause? | No — **most likely investigation lead** + supporting evidence. We rank; humans investigate and decide. |
+| Isn’t the demo rigged? | Fixtures for reproducibility. Value = elimination workflow, not oracle retrieval. See section above. |
 | Is data live? | Demo uses fixtures for reproducibility; Go HTTP + RAG index is the scale path. |
 | Where’s the backend? | Go + Python CLI pipeline producing JSON — no server required for MVP. |
 
@@ -318,6 +442,10 @@ Requires: Python 3, Go (optional fallback to fixture JSON), Node 20 in WSL.
 4. ~~Leading with RAG/BM25/agents~~ → Lead with **workflow and elimination replay**  
 5. ~~Dashboard with all cards at once~~ → **Arc-style one focus per screen**  
 6. ~~Claiming AI in README without code~~ → MVP vs roadmap split documented  
+7. ~~“AI-Assisted” branding~~ → **Investigation Triage Workspace**; AI is roadmap  
+8. ~~“Leading hypothesis” / root cause framing~~ → **Most likely investigation lead** + supporting evidence  
+9. ~~“Same inputs → same workspace”~~ → **Deterministic and explainable** — every rank traces to visible evidence  
+10. ~~Overselling two interviews~~ → **Supporting conversations**, not “industry validation”  
 
 ---
 
@@ -336,7 +464,7 @@ Requires: Python 3, Go (optional fallback to fixture JSON), Node 20 in WSL.
 # Closing line
 
 **Clique reduces investigation time before debugging time.**  
-It gathers the context you would paste into ChatGPT — eliminates what doesn’t matter — and hands Cursor a hypothesis worth fixing.
+It gathers the context you would paste into ChatGPT — eliminates what doesn’t matter — and tells you **where to spend the next 15 minutes** before you open Cursor.
 
 ---
 
@@ -351,7 +479,7 @@ Practical ordered checklist before/during submission:
 
 1. **Repo credibility** — commit + push frontend, PITCH.md, run-dev.sh (if not done)
 2. **Demo path** — run-dev.sh → localhost:5173, NOT Streamlit
-3. **60-second pitch script** — problem (30s) → click Investigate → parsing → elimination → verdict (bullets)
-4. **Judge slides order** — Problem → Maintainer validation (anonymous) → MVP demo → Roadmap (3 courses) → Cursor handoff
+3. **60-second pitch script** — problem (30s) → click Investigate → **elimination sidebar** → **investigation lead** (not hypothesis)
+4. **Judge slides order** — Problem → **Elimination panel (strongest slide)** → Maintainer A/B (supporting, not proof) → How often? → MVP demo → Roadmap → Cursor handoff
 5. **Optional before judging** — ask maintainers permission to name them later; wire workflow_run Actions artifact (roadmap slide only if not built)
 6. **What NOT to claim** — RAG/Gemini live in demo; say roadmap

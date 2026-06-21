@@ -3,6 +3,61 @@
   "isolated_exception": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'",
   "isolated_service": "payment_gateway",
   "git_source": "git_log_fixture",
+  "rag_retrieval": {
+    "query": "TypeError: Client.__init__() got unexpected keyword argument 'proxies' [ERROR] Traceback (most recent call last):\n  File \"/workspace/services/node/api-node/src/payment_gateway.py\", line 42, in initialize_client\n    self.client = VendorClient(api_key=self.secret, timeout=30.0, proxies=self.config.get('proxy_routes'))\n  File \"/workspace/services/node/api-node/.venv/lib/python3.11/site-packages/vendor_sdk/client.py\", line 114, in __init__\n    super().__init__(*args, **kwargs)\nTypeError: Client.__init__() got unexpected keyword argument 'proxies' payment_gateway vendor_sdk payment_gateway.py client.py",
+    "method": "hybrid_bm25_tfidf_rrf",
+    "top_k": 6,
+    "hits": [
+      {
+        "doc_id": "commit-vendor-bump-context",
+        "source_type": "repository_context",
+        "rrf_score": 0.032787,
+        "bm25_rank": 1,
+        "tfidf_rank": 1,
+        "snippet": "Bump vendor_sdk to 8.1.4 in api-node lockfile poetry.lock requirements.txt. Wire vendor_sdk proxy routes into payment gateway client payment_gateway.py initiali\u2026"
+      },
+      {
+        "doc_id": "issue-482-body",
+        "source_type": "community_issue",
+        "rrf_score": 0.032258,
+        "bm25_rank": 2,
+        "tfidf_rank": 2,
+        "snippet": "GitHub Issue #482 vendor_sdk python. After upgrading to v8.1.4 our payment integrations fail during client initialization. Traceback: TypeError: Client.__init__\u2026"
+      },
+      {
+        "doc_id": "release-vendor-sdk-8.1.4-notes",
+        "source_type": "package_release",
+        "rrf_score": 0.031746,
+        "bm25_rank": 3,
+        "tfidf_rank": 3,
+        "snippet": "vendor_sdk 8.1.4 release notes. Refactored network initialization layer. Removed legacy proxy configuration support from Client.__init__. The proxies keyword ar\u2026"
+      },
+      {
+        "doc_id": "issue-401-unrelated-auth",
+        "source_type": "noise",
+        "rrf_score": 0.03125,
+        "bm25_rank": 4,
+        "tfidf_rank": 4,
+        "snippet": "GitHub Issue #401 OAuth token refresh failure in unrelated microservice. JWT validation middleware TypeError different from Client proxies initialization. Auth \u2026"
+      },
+      {
+        "doc_id": "issue-483-body",
+        "source_type": "community_issue",
+        "rrf_score": 0.030769,
+        "bm25_rank": 5,
+        "tfidf_rank": 5,
+        "snippet": "GitHub Issue #483 vendor_sdk proxies parameter deprecation path. Documentation request for migrating proxy configuration after 8.1.4. Several users confused abo\u2026"
+      },
+      {
+        "doc_id": "release-express-4.19.2-notes",
+        "source_type": "package_release",
+        "rrf_score": 0.030303,
+        "bm25_rank": 6,
+        "tfidf_rank": 6,
+        "snippet": "express 4.19.2 maintenance release. Minor updates tracking standard route header configuration processing loops. No breaking API changes. Unrelated to Python cl\u2026"
+      }
+    ]
+  },
   "priority_leads": [
     {
       "type": "source_file",
@@ -23,22 +78,38 @@
     {
       "type": "community_issue",
       "strength": "high",
-      "reason": "traceback overlap",
+      "reason": "RAG hybrid retrieval (RRF=0.032258)",
       "issue_id": "482",
       "title": "After upgrading to v8.1.4 our integrations fail during client initialization. Rollback fixes the issue.",
       "timestamp": "2026-06-21T09:08:00Z",
       "url": "https://github.com/vendor-sdk/vendor-python/issues/482",
-      "traceback_match": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'"
+      "traceback_match": "GitHub Issue #482 vendor_sdk python. After upgrading to v8.1.4 our payment integrations fail during client initialization. Traceback: TypeError: Client.__init__\u2026",
+      "rag_doc_id": "issue-482-body",
+      "rag_score": 0.032258
+    },
+    {
+      "type": "community_issue",
+      "strength": "high",
+      "reason": "RAG hybrid retrieval (RRF=0.030769)",
+      "issue_id": "483",
+      "title": "Migration guide needed for proxy configuration changes.",
+      "timestamp": "2026-06-21T09:45:00Z",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/483",
+      "traceback_match": "GitHub Issue #483 vendor_sdk proxies parameter deprecation path. Documentation request for migrating proxy configuration after 8.1.4. Several users confused abo\u2026",
+      "rag_doc_id": "issue-483-body",
+      "rag_score": 0.030769
     },
     {
       "type": "package_release",
       "strength": "high",
-      "reason": "temporal proximity",
+      "reason": "RAG hybrid retrieval + temporal proximity (RRF=0.031746)",
       "package": "vendor_sdk",
       "version": "8.1.4",
       "released_at": "2026-06-21T09:06:00Z",
-      "changes": "Refactored network initialization layer. Removed legacy proxy configuration support. Streamlined client connection workflows to rely on external proxy environment variables.",
-      "hours_before_failure": 2.66
+      "changes": "vendor_sdk 8.1.4 release notes. Refactored network initialization layer. Removed legacy proxy configuration support from Client.__init__. The proxies keyword ar\u2026",
+      "hours_before_failure": 2.66,
+      "rag_doc_id": "release-vendor-sdk-8.1.4-notes",
+      "rag_score": 0.031746
     },
     {
       "type": "repository_commit",

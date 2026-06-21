@@ -55,11 +55,28 @@ export interface DiscardedItem {
   reason: string;
 }
 
+export interface RagRetrievalHit {
+  doc_id: string;
+  source_type: string;
+  rrf_score: number;
+  bm25_rank: number;
+  tfidf_rank: number;
+  snippet: string;
+}
+
+export interface RagRetrieval {
+  query: string;
+  method: string;
+  top_k: number;
+  hits: RagRetrievalHit[];
+}
+
 export interface InvestigationWorkspace {
   build_failure_timestamp: string;
   isolated_exception: string;
   isolated_service: string;
   git_source: string;
+  rag_retrieval?: RagRetrieval;
   priority_leads: PriorityLead[];
   discarded: DiscardedItem[];
 }
@@ -93,7 +110,7 @@ export interface DependencyLink {
 
 export interface EcosystemCard {
   id: string;
-  kind: "issue" | "release" | "community";
+  kind: "issue" | "release" | "community" | "rag";
   title: string;
   detail: string;
 }
@@ -111,19 +128,35 @@ export interface ConstellationEdge {
   to: string;
 }
 
+export interface InvestigationLead {
+  primary: string;
+  supporting: string[];
+}
+
 export interface LikelyCause {
   headline: string;
   detail: string;
+}
+
+export interface RankedLeadSummary {
+  name: string;
+}
+
+export interface EvidenceSummary {
+  examinedCount: number;
+  ranked: RankedLeadSummary[];
 }
 
 export interface TransformedWorkspace {
   failureClock: string;
   service: string;
   exception: string;
+  evidenceSummary: EvidenceSummary;
   eliminated: EliminatedItem[];
   reportTimeline: StreamEvent[];
   dependencyChain: DependencyLink[];
   ecosystemCards: EcosystemCard[];
+  investigationLead: InvestigationLead;
   likelyCause: LikelyCause;
   primarySignals: MatchSignal[];
   primaryLeadLabel: string;
@@ -153,10 +186,10 @@ export type InvestigationPhase =
 export const REPLAY_STEP_LABELS: Record<Exclude<InvestigationPhase, "loading" | "trigger" | "error">, string> = {
   parsing: "Extracting failure signature",
   dependency: "Mapping dependency chain",
-  ecosystem: "Scanning ecosystem signals",
+  ecosystem: "Hybrid RAG retrieval (BM25 + TF-IDF)",
   eliminating: "Ruling out alternatives",
   connecting: "Connecting evidence",
-  verdict: "Root cause candidate",
+  verdict: "Most likely investigation lead",
   evidence: "Evidence strength",
   timeline: "Incident timeline",
 };

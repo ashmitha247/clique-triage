@@ -28,7 +28,7 @@ echo ""
 echo "  Node: $(node -v) ($(command -v node))"
 echo ""
 
-echo "[1/4] Running Go log slicer..."
+echo "[1/5] Running Go log slicer..."
 if command -v go >/dev/null 2>&1; then
   go build -o log_slicer cmd/log_slicer/main.go
   ./log_slicer
@@ -36,14 +36,17 @@ else
   echo "  (Go not found — using existing data/isolated_error.json)"
 fi
 
-echo "[2/4] Running triage engine..."
+echo "[2/5] Installing Python dependencies..."
+python3 -m pip install -q -r requirements.txt 2>/dev/null || true
+
+echo "[3/5] Running triage engine (Go output + hybrid RAG retrieval)..."
 python3 triage_engine.py
 
-echo "[3/4] Syncing workspace JSON to frontend..."
+echo "[4/5] Syncing workspace JSON to frontend..."
 mkdir -p frontend/public
 cp data/investigation_workspace.json frontend/public/investigation_workspace.json
 
-echo "[4/4] Starting Vite dev server..."
+echo "[5/5] Starting Vite dev server..."
 echo ""
 echo "  Open: http://localhost:5173"
 echo ""

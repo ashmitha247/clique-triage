@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
-import type { LikelyCause } from "../types/workspace";
+import type { InvestigationLead } from "../types/workspace";
 
 interface VerdictScreenProps {
-  cause: LikelyCause;
-  primaryLeadLabel: string;
+  lead: InvestigationLead;
   primaryLeadUrl?: string;
 }
 
-export function VerdictScreen({ cause, primaryLeadLabel, primaryLeadUrl }: VerdictScreenProps) {
+export function VerdictScreen({ lead, primaryLeadUrl }: VerdictScreenProps) {
   return (
     <div className="focus-screen">
       <motion.div
@@ -16,10 +15,18 @@ export function VerdictScreen({ cause, primaryLeadLabel, primaryLeadUrl }: Verdi
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="focus-label">Root Cause Candidate</div>
-        <div className="verdict-headline">{cause.headline}</div>
-        <div className="verdict-detail">{cause.detail}</div>
-        <div className="verdict-linked">{primaryLeadLabel}</div>
+        <div className="focus-label">Most likely investigation lead</div>
+        <div className="verdict-headline">{lead.primary}</div>
+
+        <div className="verdict-supporting-block">
+          <div className="verdict-supporting-label">Supporting evidence</div>
+          <ul className="verdict-supporting-list">
+            {lead.supporting.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+
         {primaryLeadUrl && (
           <a className="cause-link" href={primaryLeadUrl} target="_blank" rel="noreferrer">
             View community report →

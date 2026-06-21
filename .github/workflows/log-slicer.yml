@@ -17,6 +17,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
       - run: go build -o log_slicer cmd/log_slicer/main.go
       - run: ./log_slicer
       - run: grep -q "TypeError" data/isolated_error.json
+      - run: python3 triage_engine.py
+      - run: grep -q "rag_retrieval" data/investigation_workspace.json

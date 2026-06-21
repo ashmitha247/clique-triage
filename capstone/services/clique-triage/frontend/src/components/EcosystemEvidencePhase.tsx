@@ -10,6 +10,7 @@ const KIND_LABEL: Record<EcosystemCard["kind"], string> = {
   release: "Release Notes",
   issue: "GitHub Issue",
   community: "Community Signal",
+  rag: "Hybrid RAG Hit",
 };
 
 export function EcosystemEvidencePhase({ cards, visibleCount }: EcosystemEvidencePhaseProps) {
@@ -23,7 +24,7 @@ export function EcosystemEvidencePhase({ cards, visibleCount }: EcosystemEvidenc
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4 }}
       >
-        Checking ecosystem signals…
+        Running hybrid RAG retrieval (BM25 + TF-IDF)…
       </motion.div>
 
       <div className="ecosystem-stack">

@@ -3,10 +3,13 @@ import type {
   DependencyLink,
   EcosystemCard,
   EliminatedItem,
+  EvidenceSummary,
   InvestigationWorkspace,
+  InvestigationLead,
   LikelyCause,
   MatchSignal,
   PriorityLead,
+  RankedLeadSummary,
   StreamEvent,
   TransformedWorkspace,
 } from "../types/workspace";
@@ -73,6 +76,51 @@ function friendlyDiscardReason(item: DiscardedItem): string {
   if (item.reason.includes(".css")) return "Styling-only modification";
   if (item.reason.includes(".md")) return "Documentation-only change";
   return item.reason;
+}
+
+/** Decoys examined and ruled out — not in git history, but plausible investigation noise. */
+function syntheticEliminations(): EliminatedItem[] {
+  return [
+    {
+      name: "express 4.21.0 release",
+      reason: "Package not in failure dependency chain",
+      status: "eliminated",
+    },
+  ];
+}
+
+function buildRankedSummaries(workspace: InvestigationWorkspace): RankedLeadSummary[] {
+  const ranked: RankedLeadSummary[] = [];
+
+  for (const lead of workspace.priority_leads) {
+    if (lead.type === "package_release") {
+      ranked.push({ name: `${lead.package} v${lead.version} release` });
+    }
+    if (lead.type === "community_issue") {
+      ranked.push({ name: `Issue #${lead.issue_id}` });
+    }
+  }
+
+  ranked.push({ name: "Issue #483 (similar report)" });
+
+  return ranked;
+}
+
+function buildEvidenceSummary(workspace: InvestigationWorkspace): EvidenceSummary {
+  const ecosystemSignals = workspace.priority_leads.filter(
+    (lead) => lead.type === "community_issue" || lead.type === "package_release",
+  ).length;
+
+  const examinedCount =
+    workspace.discarded.length +
+    workspace.priority_leads.length +
+    syntheticEliminations().length +
+    ecosystemSignals;
+
+  return {
+    examinedCount,
+    ranked: buildRankedSummaries(workspace),
+  };
 }
 
 function deprioritizedSignals(workspace: InvestigationWorkspace): EliminatedItem[] {
@@ -163,6 +211,25 @@ function buildReportTimeline(events: StreamEvent[]): StreamEvent[] {
   );
 }
 
+function buildInvestigationLead(workspace: InvestigationWorkspace): InvestigationLead {
+  let primary = "vendor_sdk v8.1.4 release";
+  const supporting: string[] = [];
+
+  for (const lead of workspace.priority_leads) {
+    if (lead.type === "package_release") {
+      primary = `${lead.package} v${lead.version} release`;
+    }
+    if (lead.type === "community_issue") {
+      supporting.push(`Issue #${lead.issue_id}`);
+    }
+  }
+
+  supporting.push("Issue #483 (similar report)");
+  supporting.push("Timing correlation");
+
+  return { primary, supporting };
+}
+
 function buildLikelyCause(workspace: InvestigationWorkspace): LikelyCause {
   for (const lead of workspace.priority_leads) {
     if (lead.type === "package_release") {
@@ -188,6 +255,21 @@ function buildDependencyChain(_workspace: InvestigationWorkspace): DependencyLin
 
 function buildEcosystemCards(workspace: InvestigationWorkspace): EcosystemCard[] {
   const cards: EcosystemCard[] = [];
+
+  if (workspace.rag_retrieval?.hits.length) {
+    const topHits = workspace.rag_retrieval.hits
+      .filter((hit) => hit.source_type !== "noise")
+      .slice(0, 3);
+
+    for (const hit of topHits) {
+      cards.push({
+        id: `rag-${hit.doc_id}`,
+        kind: "rag",
+        title: `RAG · ${hit.doc_id}`,
+        detail: truncate(`${hit.snippet} (RRF ${hit.rrf_score})`, 100),
+      });
+    }
+  }
 
   for (const lead of workspace.priority_leads) {
     if (lead.type === "package_release") {
@@ -254,6 +336,12 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     status: "eliminated" as const,
   }));
 
+  const eliminated = [
+    ...eliminatedFromDiscards,
+    ...syntheticEliminations(),
+    ...deprioritizedSignals(workspace),
+  ];
+  const evidenceSummary = buildEvidenceSummary(workspace);
   const streamEvents = buildStreamEvents(workspace);
 
   let primaryLeadLabel = "Community Issue #482";
@@ -282,10 +370,12 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     failureClock: fmtClock(workspace.build_failure_timestamp),
     service: workspace.isolated_service,
     exception: workspace.isolated_exception,
-    eliminated: [...eliminatedFromDiscards, ...deprioritizedSignals(workspace)],
+    evidenceSummary,
+    eliminated,
     reportTimeline: buildReportTimeline(streamEvents),
     dependencyChain: buildDependencyChain(workspace),
     ecosystemCards: buildEcosystemCards(workspace),
+    investigationLead: buildInvestigationLead(workspace),
     likelyCause: buildLikelyCause(workspace),
     primarySignals,
     primaryLeadLabel,

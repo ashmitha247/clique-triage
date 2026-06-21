@@ -1,8 +1,10 @@
-# Clique — AI-Assisted Investigation Workspace
+# Clique — Investigation Triage Workspace
 
 **Clique** is an incident triage workspace that assembles build logs, repository context, dependency updates, and community reports into a single investigation replay — helping developers decide what to look at first.
 
 > **Judges / demo:** See **[PITCH.md](PITCH.md)** for the full hackathon narrative, MVP vs roadmap, maintainer interview validation, and how GitHub Actions + RAG + Go CLI coursework maps to Clique.
+>
+> **InnovateZ 2026 next round:** See **[docs/INNOVATEZ_2026_SUBMISSION.md](docs/INNOVATEZ_2026_SUBMISSION.md)** — PDF-ready submission covering under-the-hood design, data sources, architecture, demo scenarios, and limitations.
 
 ---
 
@@ -14,13 +16,13 @@ The current demo is a **deterministic triage pipeline** plus a **cinematic React
 failed_build.log
       ↓  Go log slicer
 isolated_error.json
-      ↓  Python heuristic engine
+      ↓  Python triage engine + hybrid RAG (BM25 + TF-IDF + RRF)
 investigation_workspace.json
       ↓  React/Vite SPA
 Investigation replay (8 steps, one focus at a time)
 ```
 
-**No LLM calls in the MVP.** Ranking, elimination, and evidence correlation are rule-based heuristics over structured inputs.
+**No LLM calls in the MVP.** Ranking combines **hybrid RAG retrieval** (BM25 + TF-IDF + RRF over `mock_internet/rag_corpus.json`) with deterministic git elimination rules. Gemini synthesis is roadmap.
 
 ---
 
@@ -47,7 +49,7 @@ Clique automates the **assembly and elimination** phase before debugging begins.
 | Stage | Role |
 |-------|------|
 | Go log slicer | Extract traceback + exception from raw CI logs |
-| Python triage engine | Rank leads, discard noise, write workspace JSON |
+| Python triage + RAG | Rank leads via hybrid retrieval, discard noise, write workspace JSON |
 | React console | Forensic replay UI — progressive discovery, not a dashboard |
 
 External evidence in the demo comes from `mock_internet/external_evidence.json`. Git history uses real `git log` when available, otherwise `data/git_log_fixture.json`.
@@ -81,7 +83,8 @@ capstone/services/clique-triage/
 ├── cmd/log_slicer/          Go — log ingestion
 ├── triage_engine.py         Python — ranking engine
 ├── data/                    Demo logs + workspace output
-├── mock_internet/           Simulated external evidence
+├── rag/                       Hybrid RAG (BM25 + TF-IDF + RRF)
+├── mock_internet/             RAG corpus + external evidence fixtures
 ├── frontend/                React investigation replay
 ├── run-dev.sh               Primary dev entrypoint
 └── app.py                   Legacy Streamlit UI

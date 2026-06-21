@@ -1,0 +1,63 @@
+{
+  "documents": [
+    {
+      "doc_id": "release-vendor-sdk-8.1.4-notes",
+      "source_type": "package_release",
+      "package": "vendor_sdk",
+      "version": "8.1.4",
+      "timestamp": "2026-06-21T09:06:00Z",
+      "text": "vendor_sdk 8.1.4 release notes. Refactored network initialization layer. Removed legacy proxy configuration support from Client.__init__. The proxies keyword argument is no longer accepted. Streamlined client connection workflows to rely on external proxy environment variables. Migration: remove proxies= from VendorClient and Client constructor calls."
+    },
+    {
+      "doc_id": "issue-482-body",
+      "source_type": "community_issue",
+      "issue_id": "482",
+      "timestamp": "2026-06-21T09:08:00Z",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/482",
+      "title": "After upgrading to v8.1.4 our integrations fail during client initialization. Rollback fixes the issue.",
+      "text": "GitHub Issue #482 vendor_sdk python. After upgrading to v8.1.4 our payment integrations fail during client initialization. Traceback: TypeError: Client.__init__() got unexpected keyword argument 'proxies'. Rollback to 8.1.3 fixes the issue immediately. Multiple teams reporting same failure in CI pipelines."
+    },
+    {
+      "doc_id": "issue-483-body",
+      "source_type": "community_issue",
+      "issue_id": "483",
+      "timestamp": "2026-06-21T09:45:00Z",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/483",
+      "title": "Migration guide needed for proxy configuration changes.",
+      "text": "GitHub Issue #483 vendor_sdk proxies parameter deprecation path. Documentation request for migrating proxy configuration after 8.1.4. Several users confused about Client.__init__ signature changes and httpx proxy routing."
+    },
+    {
+      "doc_id": "release-express-4.19.2-notes",
+      "source_type": "package_release",
+      "package": "express",
+      "version": "4.19.2",
+      "timestamp": "2026-06-20T14:22:00Z",
+      "text": "express 4.19.2 maintenance release. Minor updates tracking standard route header configuration processing loops. No breaking API changes. Unrelated to Python client initialization or vendor_sdk proxy subsystem."
+    },
+    {
+      "doc_id": "decoy-kubernetes-client-patch",
+      "source_type": "noise",
+      "text": "kubernetes python client 29.0.1 patch release. PyYAML loader deprecation warnings in CI runners. kubectl auth plugin updates for GKE clusters. No vendor_sdk or payment gateway impact."
+    },
+    {
+      "doc_id": "decoy-docker-base-image",
+      "source_type": "noise",
+      "text": "Docker base runner engine ubuntu-24.04 amd64 initialization successful. npm and poetry cache volume mounts. NODE_ENV staging PORT 8080 environment vectors. Infrastructure only, no application dependency changes."
+    },
+    {
+      "doc_id": "decoy-eslint-config",
+      "source_type": "noise",
+      "text": "eslint prettier configuration update for frontend lint rules. checkout.css styling refresh for staging deploy preview. Documentation README proxy migration notes for on-call handoff. Non-functional asset changes."
+    },
+    {
+      "doc_id": "commit-vendor-bump-context",
+      "source_type": "repository_context",
+      "text": "Bump vendor_sdk to 8.1.4 in api-node lockfile poetry.lock requirements.txt. Wire vendor_sdk proxy routes into payment gateway client payment_gateway.py initialize_client VendorClient proxies config proxy_routes."
+    },
+    {
+      "doc_id": "issue-401-unrelated-auth",
+      "source_type": "noise",
+      "text": "GitHub Issue #401 OAuth token refresh failure in unrelated microservice. JWT validation middleware TypeError different from Client proxies initialization. Auth service only."
+    }
+  ]
+}

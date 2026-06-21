@@ -270,7 +270,11 @@ export default function App() {
               )}
 
               {phase === "eliminating" && (
-                <EliminationSequence items={data.eliminated} activeIndex={elimIndex} />
+                <EliminationSequence
+                  items={data.eliminated}
+                  activeIndex={elimIndex}
+                  summary={data.evidenceSummary}
+                />
               )}
 
               {phase === "connecting" && (
@@ -286,11 +290,7 @@ export default function App() {
               )}
 
               {phase === "verdict" && (
-                <VerdictScreen
-                  cause={data.likelyCause}
-                  primaryLeadLabel={data.primaryLeadLabel}
-                  primaryLeadUrl={data.primaryLeadUrl}
-                />
+                <VerdictScreen lead={data.investigationLead} primaryLeadUrl={data.primaryLeadUrl} />
               )}
 
               {phase === "evidence" && <EvidenceScreen signals={data.primarySignals} />}
