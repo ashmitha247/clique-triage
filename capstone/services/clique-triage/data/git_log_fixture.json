@@ -1,0 +1,52 @@
+{
+  "commits": [
+    {
+      "hash": "f4e8a1c2b9d03e7",
+      "author": "dev@example.com",
+      "date": "2026-06-21T11:30:00Z",
+      "subject": "Wire vendor_sdk proxy routes into payment gateway client",
+      "files": [
+        "services/node/api-node/src/payment_gateway.py",
+        "services/node/api-node/requirements.txt"
+      ]
+    },
+    {
+      "hash": "a9b2c7d1e0f84a6",
+      "author": "dev@example.com",
+      "date": "2026-06-21T10:15:00Z",
+      "subject": "Refresh checkout styling for staging deploy preview",
+      "files": [
+        "services/node/api-node/src/checkout.css"
+      ]
+    },
+    {
+      "hash": "c3d5e8f2a1b76c4",
+      "author": "dev@example.com",
+      "date": "2026-06-21T09:55:00Z",
+      "subject": "Document proxy migration notes for on-call handoff",
+      "files": [
+        "services/node/api-node/README.md"
+      ]
+    },
+    {
+      "hash": "b7e2f9a4c8d15b3",
+      "author": "dev@example.com",
+      "date": "2026-06-21T09:20:00Z",
+      "subject": "Bump vendor_sdk to 8.1.4 in api-node lockfile",
+      "files": [
+        "services/node/api-node/requirements.txt",
+        "services/node/api-node/poetry.lock"
+      ]
+    },
+    {
+      "hash": "d1a6c3e9f2b87d0",
+      "author": "dev@example.com",
+      "date": "2026-06-20T16:40:00Z",
+      "subject": "Add integration test harness for payment gateway initialization",
+      "files": [
+        "services/node/api-node/tests/test_payment_gateway.py",
+        "services/node/api-node/src/payment_gateway.py"
+      ]
+    }
+  ]
+}
