@@ -1,24 +1,36 @@
 # System State: Clique Investigation Workspace
 **Last Updated:** 2026-06-21
-**Status:** Ingestion Setup Phase
+**Status:** Investigation Replay Ready — Deterministic pipeline + React cinematic UI
 
 ---
 
-## 🏗️ 1. Project Architecture & Core Identity
-* **One-Sentence Anchor:** Clique is an incident triage workspace that automatically assembles build logs, repository context, dependency updates, and community reports into a single investigation view, helping developers decide what to look at first.
+## Architecture
+
+```text
+failed_build.log → Go log_slicer → isolated_error.json
+                                 ↓
+mock_internet + git fixture → triage_engine.py → investigation_workspace.json
+                                 ↓
+React/Vite SPA → 8-step investigation replay (Arc-style, one focus at a time)
+```
+
+**MVP:** Deterministic heuristics. No LLM in pipeline.
+**Roadmap:** Gemini synthesis layer over ranked workspace JSON.
 
 ---
 
-## ✅ 4. Implemented Features
-* **Baseline Directory Mapping (2026-06-21):** Standalone triage environment established at `capstone/services/clique-triage/`.
-* **Go Log Slicer Core (2026-06-21):** Implemented high-performance compiled Go tokenizer (`main.go`) to isolate runtime exceptions from raw CI log dumps.
-* **Repository Sanitization (2026-06-21):** Purged 10 instructional tutorial directories from root workspace and deployed enterprise product documentation to root `README.md`.
+## Run
+
+```bash
+cd capstone/services/clique-triage
+bash run-dev.sh   # primary — port 5173
+```
 
 ---
 
-## 🔄 5. Pending Tasks & Sprint Backlog
-- [x] Establish baseline telemetry simulation log configurations.
-- [x] Implement Go Log Slicer CLI engine file reader.
-- [x] Purge root repository of tutorial chapter bloat.
-- [ ] Code Python context ranking and asset elimination heuristics.
-- [ ] Construct Streamlit chronological causality web dashboard interface.
+## Implemented
+
+- Go log slicer (`cmd/log_slicer/main.go`)
+- Python triage engine (`triage_engine.py`)
+- React investigation replay (`frontend/`)
+- Legacy Streamlit prototype (`app.py`)

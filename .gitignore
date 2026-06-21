@@ -2,3 +2,5 @@
 .devbox/
 .venv/
 capstone/services/clique-triage/log_slicer
+capstone/services/clique-triage/frontend/node_modules/
+capstone/services/clique-triage/frontend/dist/

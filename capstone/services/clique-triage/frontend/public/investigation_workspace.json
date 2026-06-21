@@ -1,0 +1,105 @@
+{
+  "build_failure_timestamp": "2026-06-21T11:45:34Z",
+  "isolated_exception": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'",
+  "isolated_service": "payment_gateway",
+  "git_source": "git_log_fixture",
+  "priority_leads": [
+    {
+      "type": "source_file",
+      "strength": "high",
+      "reason": "present in isolated exception traceback",
+      "file": "payment_gateway.py",
+      "path": "/workspace/services/node/api-node/src/payment_gateway.py",
+      "line": 42
+    },
+    {
+      "type": "source_file",
+      "strength": "high",
+      "reason": "present in isolated exception traceback",
+      "file": "client.py",
+      "path": "/workspace/services/node/api-node/.venv/lib/python3.11/site-packages/vendor_sdk/client.py",
+      "line": 114
+    },
+    {
+      "type": "community_issue",
+      "strength": "high",
+      "reason": "traceback overlap",
+      "issue_id": "482",
+      "title": "After upgrading to v8.1.4 our integrations fail during client initialization. Rollback fixes the issue.",
+      "timestamp": "2026-06-21T09:08:00Z",
+      "url": "https://github.com/vendor-sdk/vendor-python/issues/482",
+      "traceback_match": "TypeError: Client.__init__() got unexpected keyword argument 'proxies'"
+    },
+    {
+      "type": "package_release",
+      "strength": "high",
+      "reason": "temporal proximity",
+      "package": "vendor_sdk",
+      "version": "8.1.4",
+      "released_at": "2026-06-21T09:06:00Z",
+      "changes": "Refactored network initialization layer. Removed legacy proxy configuration support. Streamlined client connection workflows to rely on external proxy environment variables.",
+      "hours_before_failure": 2.66
+    },
+    {
+      "type": "repository_commit",
+      "strength": "medium",
+      "reason": "recent functional code change",
+      "commit": "f4e8a1c2b9d03e7",
+      "subject": "Wire vendor_sdk proxy routes into payment gateway client",
+      "author": "dev@example.com",
+      "date": "2026-06-21T11:30:00Z",
+      "files": [
+        "services/node/api-node/src/payment_gateway.py",
+        "services/node/api-node/requirements.txt"
+      ]
+    },
+    {
+      "type": "repository_commit",
+      "strength": "medium",
+      "reason": "recent functional code change",
+      "commit": "b7e2f9a4c8d15b3",
+      "subject": "Bump vendor_sdk to 8.1.4 in api-node lockfile",
+      "author": "dev@example.com",
+      "date": "2026-06-21T09:20:00Z",
+      "files": [
+        "services/node/api-node/requirements.txt",
+        "services/node/api-node/poetry.lock"
+      ]
+    },
+    {
+      "type": "repository_commit",
+      "strength": "medium",
+      "reason": "recent functional code change",
+      "commit": "d1a6c3e9f2b87d0",
+      "subject": "Add integration test harness for payment gateway initialization",
+      "author": "dev@example.com",
+      "date": "2026-06-20T16:40:00Z",
+      "files": [
+        "services/node/api-node/tests/test_payment_gateway.py",
+        "services/node/api-node/src/payment_gateway.py"
+      ]
+    }
+  ],
+  "discarded": [
+    {
+      "commit": "a9b2c7d1e0f84a6",
+      "subject": "Refresh checkout styling for staging deploy preview",
+      "author": "dev@example.com",
+      "date": "2026-06-21T10:15:00Z",
+      "files": [
+        "services/node/api-node/src/checkout.css"
+      ],
+      "reason": "non-functional asset (.css)"
+    },
+    {
+      "commit": "c3d5e8f2a1b76c4",
+      "subject": "Document proxy migration notes for on-call handoff",
+      "author": "dev@example.com",
+      "date": "2026-06-21T09:55:00Z",
+      "files": [
+        "services/node/api-node/README.md"
+      ],
+      "reason": "non-functional asset (.md)"
+    }
+  ]
+}
