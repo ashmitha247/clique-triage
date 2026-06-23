@@ -1,4 +1,4 @@
-name: Log Slicer CI
+name: Pipeline CI
 
 on:
   push:

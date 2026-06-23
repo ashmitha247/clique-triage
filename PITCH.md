@@ -1,7 +1,7 @@
 # Clique — Investigation Triage Workspace
-**Hackathon pitch · MVP vs roadmap · Judge handout**
+**Product pitch · MVP vs roadmap · Q&A handout**
 
-*Not “AI-Assisted” in the MVP — ranking and elimination are deterministic. AI synthesis is roadmap (RAG course).*
+*Not “AI-Assisted” in the MVP — ranking, elimination, and hybrid RAG retrieval are deterministic and auditable. LLM synthesis (Gemini) is roadmap.*
 
 ---
 
@@ -158,7 +158,7 @@ failed_build.log
 isolated_error.json
       ↓  Python heuristic engine (deterministic rules)
 investigation_workspace.json
-      ↓  React investigation replay (8 steps, one focus at a time)
+      ↓  React investigation replay (4 guided steps)
 Browser @ localhost:5173
 ```
 
@@ -166,13 +166,14 @@ Browser @ localhost:5173
 |-------|------|--------|
 | Log ingestion | **Go** — `cmd/log_slicer/main.go` | ✅ Built |
 | Ranking & elimination | **Python** — `triage_engine.py` | ✅ Built (rules, no LLM) |
+| Hybrid RAG retrieval | **Python** — `rag/retriever.py` (BM25 + TF-IDF + RRF) | ✅ Built (fixture corpus) |
 | External evidence | **JSON fixtures** — `mock_internet/` | ✅ Demo data (reproducible) |
 | Git context | **subprocess git** or `git_log_fixture.json` | ✅ Built |
-| UI | **React + Vite + Framer Motion** | ✅ Built (cinematic replay) |
-| CI | **GitHub Actions** — log slicer test | ✅ Built |
-| RAG retrieval | BM25 / embeddings / hybrid | 🔜 Roadmap (RAG course) |
-| LLM synthesis | **Gemini** over ranked JSON | 🔜 Roadmap (RAG course) |
-| Failure-triggered CI pipeline | Actions on `workflow_failure` | 🔜 Roadmap (Actions course) |
+| UI | **React + Vite + Framer Motion** | ✅ Built (guided walkthrough) |
+| CI | **GitHub Actions** — log slicer + pipeline smoke test | ✅ Built |
+| LLM synthesis | **Gemini** over ranked JSON | 🔜 Roadmap |
+| Live API fetch (PyPI/GitHub) | Go HTTP clients | 🔜 Roadmap |
+| Failure-triggered CI pipeline | Actions on `workflow_failure` | 🔜 Roadmap |
 
 **Critical honesty:** The MVP is **deterministic and explainable**. Every ranking decision traces back to visible evidence — traceback overlap, file type, temporal proximity, dependency chain. No hallucinated leads.
 
@@ -426,8 +427,8 @@ Clique is not for every red build. It’s for the ones where investigation time 
 | **How often does this happen?** | **Not every failure.** Most are syntax errors, missing env vars, or failed unit tests — Cursor handles those. Clique targets the **expensive minority**: clean PR breaks, traceback + timeline mismatch, multi-source hunts where engineers must leave the repo and gather external evidence before forming a hypothesis. Ajeet said external breaks are rare; Huda sees them more in fast-moving deps. |
 | **Aren't dependency updates usually backward compatible?** | Yes — most are. That's why Clique is not for every red build. Clique is for the cases where compatibility still breaks: clean PR, traceback points into a dependency, and you need to identify which upstream release in a noisy window explains the failure. Backward compatibility is common; the investigation cost is the pain when it breaks anyway. |
 | Why “Investigation Triage” not “AI-Assisted”? | MVP is deterministic. No Gemini in the demo. AI summarizes **already-ranked** evidence on the roadmap. |
-| Where’s the AI? | MVP ranks deterministically. Gemini summarizes ranked evidence next (RAG course). |
-| Where’s RAG? | Roadmap replaces fixtures with BM25 + embedding retrieval (Hoopla pipeline). |
+| Where’s the AI? | Hybrid RAG retrieval is live (deterministic). Gemini summarizes ranked evidence next (roadmap). |
+| Where’s RAG? | **Built** — hybrid BM25 + TF-IDF + RRF over `mock_internet/rag_corpus.json`. Roadmap: live corpus from PyPI/GitHub APIs. |
 | Why not Dependabot? | They notify updates; we investigate a **specific failure**. |
 | Why not Cursor / Copilot / Claude with the log pasted? | Before you ask Cursor for a fix, you need to know what evidence matters. **Cursor helps solve a problem. Clique helps define the problem.** |
 | **Why not Cursor + web search on the log?** | Often **70–90% there in one session** with good prompting. In 2026, GitHub also has **Fix with Copilot** on Actions runs. Missing: auditable elimination, repeatable packet, same starting point on the next failure. **Clique → Cursor** automates the hunt first, then you fix — roadmap: CI trigger + MCP. |
@@ -435,7 +436,7 @@ Clique is not for every red build. It’s for the ones where investigation time 
 | Why ranking? I'll search GitHub myself. | Finding info is easy. **Deciding what deserves attention** when there are dozens of signals is hard. Point to: 12 examined → 3 ranked → 1 lead. |
 | Is this the root cause? | No — **most likely investigation lead** + supporting evidence. We rank; humans investigate and decide. |
 | Isn’t the demo rigged? | Fixtures for reproducibility. Value = elimination workflow, not oracle retrieval. See section above. |
-| Is data live? | Demo uses fixtures for reproducibility; Go HTTP + RAG index is the scale path. |
+| Is data live? | External evidence uses fixtures for reproducibility; RAG retrieval runs over that corpus. Live API fetch is the scale path. |
 | Where’s the backend? | Go + Python CLI pipeline producing JSON — no server required for MVP. |
 
 ---
@@ -457,12 +458,12 @@ Clique is not for every red build. It’s for the ones where investigation time 
 
 # Technology stack (final)
 
-| Concern | MVP | Roadmap (your courses) |
-|---------|-----|------------------------|
-| Log parsing | Go stdlib CLI | + cache, live HTTP fetch (Go CLI course) |
-| Evidence ranking | Python heuristics | + hybrid RAG retrieval (Hoopla) |
-| Narrative / summary | React replay copy | + Gemini over workspace JSON (RAG ch. 10) |
-| Trigger | Manual `run-dev.sh` | + Actions on failure + artifacts (Actions capstone) |
+| Concern | MVP | Roadmap |
+|---------|-----|---------|
+| Log parsing | Go stdlib CLI | + cache, live HTTP fetch |
+| Evidence ranking | Python heuristics + hybrid RAG | + live corpus from APIs |
+| Narrative / summary | React replay copy | + Gemini over workspace JSON |
+| Trigger | Manual `run-dev.sh` | + Actions on failure + artifacts |
 | UI | React, Vite, Framer Motion | Same contract; richer replay |
 
 ---
@@ -479,13 +480,11 @@ It gathers the context you would paste into ChatGPT — eliminates what doesn’
 
 ---
 
-## Next plan (hackathon execution)
+## Demo checklist
 
-Practical ordered checklist before/during submission:
+Before presenting:
 
-1. **Repo credibility** — commit + push frontend, PITCH.md, run-dev.sh (if not done)
-2. **Demo path** — run-dev.sh → localhost:5173, NOT Streamlit
-3. **60-second pitch script** — problem (30s) → click Investigate → **elimination sidebar** → **investigation lead** (not hypothesis)
-4. **Judge slides order** — Problem → **Elimination panel (strongest slide)** → Huda + Ajeet (supporting, not proof) → How often? → MVP demo → Roadmap → Cursor handoff
-5. **Optional before judging** — ask maintainers permission to name them later; wire workflow_run Actions artifact (roadmap slide only if not built)
-6. **What NOT to claim** — RAG/Gemini live in demo; say roadmap
+1. **Demo path** — `bash run-dev.sh` → localhost:5173 (not Streamlit)
+2. **60-second pitch** — problem (30s) → click Investigate → **elimination sidebar** → **investigation lead**
+3. **Slide order** — Problem → **Elimination panel (strongest slide)** → maintainer validation → How often? → MVP demo → Roadmap → Cursor handoff
+4. **What NOT to claim** — Gemini/LLM is not live; hybrid RAG retrieval **is** live over fixture corpus

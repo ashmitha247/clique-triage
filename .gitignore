@@ -1,8 +1,11 @@
 .DS_Store
 .devbox/
 .venv/
+__pycache__/
+*.py[cod]
 .github/workflows/.cursor/
 capstone/services/clique-triage/log_slicer
 capstone/services/clique-triage/docs/*.pdf
 capstone/services/clique-triage/frontend/node_modules/
 capstone/services/clique-triage/frontend/dist/
+capstone/services/clique-triage/frontend/.vercel/

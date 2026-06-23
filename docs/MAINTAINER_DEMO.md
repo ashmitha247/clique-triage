@@ -6,8 +6,8 @@ Send this link to **Huda Naaz** (kuberef) and **Ajeet Singh** (Open Sox) when as
 
 ## Demo link
 
-**Full presentation recording (10-act prelude + product + limitations):** `https://YOUR-VERCEL-URL.vercel.app/?demo=1`  
-**Product-only (maintainers):** `https://YOUR-VERCEL-URL.vercel.app`  
+**Full presentation recording (10-act prelude + product + limitations):** https://clique-demo-six.vercel.app/?demo=1  
+**Product-only (maintainers):** https://clique-demo-six.vercel.app  
 **Local fallback:**
 
 ```bash

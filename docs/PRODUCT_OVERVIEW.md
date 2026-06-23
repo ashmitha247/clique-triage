@@ -16,7 +16,7 @@ Clique targets **investigation-heavy failures** — cases where engineers must *
 
 **What works today:** Pipeline — **Input** (CI log + git + RAG corpus) → **Processing** (parse, **hybrid RAG retrieve**, eliminate, rank) → **Output** (elimination replay + investigation lead). **No Gemini in demo** — RAG retrieval is live; LLM synthesis is next.
 
-**Where AI fits (honest):** Ranking and elimination are built and auditable now. **Gemini + RAG** sit on the roadmap as the synthesis and retrieval layers over the same JSON contract — see Section 2b.
+**Where AI fits (honest):** Ranking, elimination, and hybrid RAG retrieval are built and auditable now. **Gemini synthesis** sits on the roadmap as the language layer over the same JSON contract — see Section 2b.
 
 **Strongest proof point:** Screenshot the **elimination panel** (`Evidence examined: 12`, discarded list filling, ranked survivors) — not the architecture diagram.
 
@@ -346,14 +346,14 @@ Then point at the elimination panel: **12 examined → 3 ranked → 1 lead.**
 
 > Before I can ask Cursor for a fix, I need to know what evidence matters. Cursor helps solve a problem. Clique helps define the problem.
 
-## What Gemini / RAG add (roadmap — not live in demo)
+## What Gemini adds (roadmap — not live in demo)
 
-After deterministic ranking produces `investigation_workspace.json`:
+After deterministic ranking and RAG retrieval produce `investigation_workspace.json`:
 
-- **RAG** retrieves release notes and issue threads (replacing `mock_internet/`)
+- **Live corpus fetch** replaces `mock_internet/` fixtures (PyPI, GitHub APIs)
 - **Gemini** writes a narrative summary **over the ranked JSON only** — it does not choose leads
 
-The MVP proves Layer 1. Layers 2–3 are the AI hackathon extension path with a fixed contract.
+The MVP proves Layer 1 (deterministic ranking + hybrid RAG over fixtures). Layer 2 (Gemini synthesis) extends the same contract.
 
 ---
 
@@ -521,7 +521,7 @@ bash run-dev.sh
 | Investigation lead + supporting evidence screen | ✅ Working |
 | GitHub Actions CI for Go slicer | ✅ Working |
 | Live PyPI / GitHub API fetch | 🔜 Not built |
-| RAG retrieval (BM25 / embeddings) | 🔜 Not built |
+| Hybrid RAG retrieval (BM25 + TF-IDF + RRF) | ✅ Working (fixture corpus) |
 | Gemini / LLM summarization | 🔜 Not built |
 | CI failure auto-trigger (`workflow_run`) | 🔜 Not built |
 | Streamlit UI (`run.sh`, port 8501) | ⚠️ Legacy prototype — not submission demo |

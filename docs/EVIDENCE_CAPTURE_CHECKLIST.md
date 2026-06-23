@@ -1,6 +1,6 @@
 # Evidence capture checklist
 
-Complete these after the guided UI is deployed. **You** record and export — this doc is the checklist.
+Internal checklist for screenshots, recording, and PDF export before submission.
 
 ---
 
@@ -61,7 +61,7 @@ npm run build
 npx vercel dist --prod
 ```
 
-- [ ] Paste **`https://YOUR-URL.vercel.app/?demo=1`** in Google Form
+- [ ] Paste **https://clique-demo-six.vercel.app/?demo=1** in submission form
 - [ ] Update README demo link
 - [ ] Update presentation deck links section
 - [ ] Send product URL (`/`) to maintainers with MAINTAINER_DEMO template

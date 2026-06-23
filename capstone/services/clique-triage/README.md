@@ -1,14 +1,14 @@
 # Clique — Investigation Triage
 
-Capstone service: Go log extraction, Python hybrid-RAG triage, and a React investigation walkthrough.
+Go log extraction, Python hybrid-RAG triage, and a React investigation walkthrough.
 
-## Live demo
+## Quick links
 
-**https://clique-demo-six.vercel.app/**
-
-Opens the product landing → **Start investigation** → 4-step guided walkthrough (Gather → Eliminate → Rank → Investigation lead).
-
-> Production is deployed separately via Vercel CLI. This repo is **not** connected to Vercel Git auto-deploy. Pushing to GitHub does not change the live URL.
+| | |
+|---|---|
+| **Live demo** | https://clique-demo-six.vercel.app/ |
+| **Root README** | [../../../README.md](../../../README.md) |
+| **Product overview** | [../../../docs/PRODUCT_OVERVIEW.md](../../../docs/PRODUCT_OVERVIEW.md) |
 
 ## Run locally
 
@@ -18,29 +18,35 @@ bash run-dev.sh
 
 | URL | Purpose |
 |-----|---------|
-| http://localhost:5173/ | Same as live demo (landing + walkthrough) |
-| http://localhost:5173/?demo=1 | Full presentation (prelude + demo story + walkthrough) |
-| http://localhost:5173/?demo=1&pdf=1 | Scrollable PDF export view |
+| http://localhost:5173/ | Product landing → 4-step walkthrough |
+| http://localhost:5173/?demo=1 | Full presentation deck + walkthrough |
+| http://localhost:5173/?demo=1&pdf=1 | PDF export preview |
 
-## Generate PDF deck (local)
+## Pipeline
 
-```bash
-cd frontend
-npm run pdf:preview
+```text
+failed_build.log → Go log slicer → isolated_error.json
+                 → Python triage + RAG → investigation_workspace.json
+                 → React SPA
 ```
-
-Output: `docs/Clique-Presentation.pdf` (gitignored — regenerate locally).
 
 ## Layout
 
 ```text
-├── cmd/log_slicer/       Go — traceback extraction
-├── triage_engine.py      Python — hybrid RAG + ranking
-├── data/                 Fixtures + workspace JSON
-├── mock_internet/        RAG corpus + external evidence
+├── cmd/log_slicer/     Go — traceback extraction
+├── triage_engine.py      Python — ranking + elimination
+├── rag/                  Hybrid RAG (BM25 + TF-IDF + RRF)
+├── mock_internet/        RAG corpus + external evidence fixtures
+├── data/                 Demo logs + workspace output
 ├── frontend/             React/Vite SPA
 ├── run-dev.sh            Primary dev entrypoint
-└── docs/                 Generated PDF (local)
+└── app.py                Legacy Streamlit (not the demo path)
 ```
 
-See the [repository README](../../README.md) for architecture, positioning, and docs.
+## PDF export
+
+```bash
+cd frontend && npm run pdf:preview
+```
+
+Output: `docs/Clique-Presentation.pdf` (gitignored — regenerate locally).
