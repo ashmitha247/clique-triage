@@ -1,6 +1,8 @@
-# Clique — Investigation Triage Workspace
+# Clique
 
-When CI fails, engineers drown in tabs — logs, git history, release notes, community threads. **Clique** assembles that evidence, eliminates noise, ranks what survives, and replays the investigation so you know **what to look at first**.
+> Reduce the search space before debugging.
+
+Clique is an investigation triage tool for CI failures. Instead of trying to automatically fix a broken build, Clique gathers evidence from logs, git history, releases, and community reports, then produces an **Investigation Packet** that helps developers decide where to start investigating.
 
 | | |
 |---|---|
@@ -11,62 +13,110 @@ When CI fails, engineers drown in tabs — logs, git history, release notes, com
 
 ---
 
-## Table of contents
+## Live demo
 
-- [What exists today](#what-exists-today-mvp)
-- [The problem](#the-problem)
-- [Architecture](#architecture)
-- [Run locally](#run-locally)
-- [Live demo](#live-demo)
-- [Documentation](#documentation)
-- [Repository layout](#repository-layout)
-- [Positioning](#positioning)
+**https://clique-demo-six.vercel.app/**
+
+| URL | Purpose |
+|-----|---------|
+| `/` | Product landing → **Start investigation** → 4-step walkthrough |
+| `/?demo=1` | Full presentation (prelude slides + demo story + walkthrough) |
 
 ---
 
-## What exists today (MVP)
+## Problem
 
-A **triage pipeline** plus a **guided investigation walkthrough** (4 steps, user-controlled):
+Many CI failures are straightforward:
+
+* Syntax errors
+* Missing environment variables
+* Broken unit tests
+
+Modern coding assistants can usually help with these.
+
+Clique targets a different category of failure:
+
+* A clean PR suddenly breaks CI
+* The traceback points to a dependency rather than your code
+* An upstream package may have changed
+* Developers must leave the repository and investigate across CI logs, git history, release notes, GitHub issues, and community discussions
+
+Research such as TOSEM 2023, FSE 2024, and Breaking-Good 2024 shows that identifying a failure is often easier than identifying its cause. See [docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md) for citations and maintainer validation.
+
+---
+
+## What Clique does
+
+Clique assembles an **Investigation Packet** containing:
+
+* Ranked investigation leads
+* Supporting evidence
+* Similar reports
+* Timeline correlations
+* Eliminated candidates and reasons
+
+Clique does **not** claim root cause. Its goal is to reduce the search space and provide a structured starting point for investigation.
+
+The React UI replays that packet as a guided walkthrough: **Gather → Eliminate → Rank → Investigation lead**. Step 3 (elimination) is the strongest proof point — what was examined, ruled out, and why.
+
+---
+
+## How it works
 
 ```text
-failed_build.log
-      ↓  Go log slicer
-isolated_error.json
-      ↓  Python triage engine + hybrid RAG (BM25 + TF-IDF + RRF)
-investigation_workspace.json
-      ↓  React/Vite SPA
-Guided demo: Gather → Eliminate → Rank → Investigation lead
-```
-
-**No LLM calls in the MVP.** Ranking combines **hybrid RAG retrieval** (BM25 + TF-IDF + RRF over `mock_internet/rag_corpus.json`) with deterministic git elimination rules. Gemini synthesis is on the roadmap.
-
----
-
-## The problem
-
-When CI fails, engineers face **information overload**, not information access. The bottleneck is manually opening tabs for logs, git history, dependency manifests, and community issues.
-
-Clique automates the **assembly and elimination** phase before debugging begins.
-
----
-
-## Architecture
-
-```text
-[ Pipeline Failure ] ──► [ Go Log Slicer ] ──► [ Python Triage + RAG ] ──► [ React Investigation Replay ]
+CI Failure
+    ↓
+Go Log Extraction
+    ↓
+Error Snapshot (isolated_error.json)
+    ↓
+Hybrid Retrieval + Rule-Based Triage
+    ↓
+Rank & Eliminate
+    ↓
+Investigation Packet (investigation_workspace.json)
+    ↓
+React Investigation UI
 ```
 
 | Stage | Role |
 |-------|------|
-| Go log slicer | Extract traceback + exception from raw CI logs |
-| Python triage + RAG | Rank leads via hybrid retrieval, discard noise, write workspace JSON |
-| React console | Landing + 4-step walkthrough; elimination panel is the hero on step 3 |
+| Go log slicer | Parse CI log → exception + stack trace |
+| Python triage engine | Git analysis, release correlation, hybrid retrieval, elimination |
+| Hybrid RAG | BM25 + TF-IDF + Reciprocal Rank Fusion over `mock_internet/rag_corpus.json` |
+| React UI | Landing + 4-step walkthrough; elimination panel on step 3 |
 
-External evidence in the demo comes from `mock_internet/external_evidence.json`. Git history uses real `git log` when available, otherwise `data/git_log_fixture.json`.
+**No LLM calls in the MVP.** Ranking and retrieval are deterministic and auditable. Gemini-powered packet summaries are on the roadmap.
+
+External evidence in the demo uses fixtures (`mock_internet/`) for reproducibility. Git history uses real `git log` when available, otherwise `data/git_log_fixture.json`.
 
 ---
 
-## Run locally
+## Repository structure
+
+```text
+.
+├── README.md                          ← start here
+├── PITCH.md                           ← pitch & Q&A
+├── LICENSE
+├── docs/                              ← product documentation
+│   ├── PRODUCT_OVERVIEW.md
+│   └── MAINTAINER_DEMO.md
+├── .github/workflows/log-slicer.yml   ← CI pipeline smoke test
+└── capstone/services/clique-triage/   ← application source
+    ├── cmd/log_slicer/                Go log parser
+    ├── triage_engine.py               Ranking and elimination engine
+    ├── rag/                           Hybrid retrieval components
+    ├── mock_internet/                 Demo evidence + RAG corpus
+    ├── data/                          Logs and generated JSON
+    ├── frontend/                      React demo UI
+    ├── run-dev.sh                     Local demo runner
+    └── docs/                          Generated PDF (local, gitignored)
+```
+
+---
+
+## Running locally
 
 **Requirements:** Python 3, Go, Node.js 18+
 
@@ -78,8 +128,8 @@ bash run-dev.sh
 
 | URL | Purpose |
 |-----|---------|
-| http://localhost:5173/ | Product landing → **Start investigation** → 4-step walkthrough |
-| http://localhost:5173/?demo=1 | Full presentation (prelude slides + demo story + walkthrough) |
+| http://localhost:5173/ | Same as live demo (landing + 4 steps) |
+| http://localhost:5173/?demo=1 | Full presentation + walkthrough |
 | http://localhost:5173/?demo=1&pdf=1 | PDF export preview |
 
 **Generate PDF deck (local):**
@@ -93,55 +143,58 @@ Output: `capstone/services/clique-triage/docs/Clique-Presentation.pdf` (gitignor
 
 ---
 
-## Live demo
+## Current status
 
-**https://clique-demo-six.vercel.app/**
+### Built today
 
-Same as local root URL: landing → **Start investigation** → Gather / Eliminate / Rank / Investigation lead.
+* Go log extraction pipeline
+* Investigation packet generation
+* Hybrid retrieval (BM25 + TF-IDF + Reciprocal Rank Fusion)
+* Rule-based ranking and elimination
+* React investigation walkthrough
+* GitHub Actions validation workflow
+
+### Roadmap
+
+* CI-triggered packet generation on repository failures
+* GitHub Action delivery workflow
+* Live GitHub Issues integration
+* Live release-note retrieval
+* Dependency graph analysis
+* Gemini-powered packet summaries
+* Open in Cursor workflow
+
+---
+
+## Why not just use ChatGPT?
+
+Clique focuses on evidence assembly before remediation.
+
+An LLM can help fix code once the relevant evidence is known. Clique helps determine **which evidence deserves attention in the first place**.
+
+Before asking an AI assistant for a fix, developers often need to understand where the failure may have originated. Clique automates that investigation step.
+
+**vs Dependabot:** Dependabot notifies about updates. Clique asks: *could an external change explain this specific failure?*
+
+**vs Copilot/Cursor:** IDE tools excel at local code. Clique gathers external evidence so your IDE gets the right context.
+
+---
+
+## Demo notes
+
+The current demo uses saved fixtures for reproducibility. The investigation engine is real. Live ecosystem integrations are part of the roadmap and will use the same Investigation Packet format demonstrated today.
 
 > The Vercel project is not linked to this GitHub repo. Pushing here does not redeploy the live site.
 
 ---
 
-## Documentation
+## Tech stack
 
-| Document | Audience |
-|----------|----------|
-| [docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md) | Design, data sources, architecture, demo scenario, limitations |
-| [PITCH.md](PITCH.md) | Problem framing, maintainer validation, judge Q&A |
-| [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md) | Recording script for the full presentation |
-| [docs/README.md](docs/README.md) | Documentation index |
-
----
-
-## Repository layout
-
-```text
-.
-├── README.md                          ← start here
-├── PITCH.md                           ← pitch & Q&A
-├── docs/                              ← product documentation
-├── .github/workflows/log-slicer.yml   ← CI: pipeline smoke test
-└── capstone/services/clique-triage/   ← application (all source code)
-    ├── cmd/log_slicer/                Go — log ingestion
-    ├── triage_engine.py               Python — ranking + elimination
-    ├── rag/                           Hybrid RAG (BM25 + TF-IDF + RRF)
-    ├── mock_internet/                 RAG corpus + external evidence fixtures
-    ├── data/                          Demo logs + workspace output
-    ├── frontend/                      React/Vite SPA
-    ├── run-dev.sh                     Primary dev entrypoint
-    └── app.py                         Legacy Streamlit (not the demo path)
-```
-
-Service-level quickstart: [capstone/services/clique-triage/README.md](capstone/services/clique-triage/README.md)
-
----
-
-## Positioning
-
-**vs Dependabot:** Dependabot notifies about updates. Clique asks: *could an external change explain this specific failure?*
-
-**vs Copilot/Cursor:** IDE tools excel at local code. Clique gathers external evidence so your IDE gets the right context.
+* Go
+* Python
+* React + Vite
+* GitHub Actions
+* BM25, TF-IDF, Reciprocal Rank Fusion (RRF)
 
 ---
 
