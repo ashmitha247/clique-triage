@@ -1,12 +1,7 @@
 # Clique — Product overview
-
-**Team project:** Clique (Investigation Triage Workspace)  
-**Document version:** June 2026  
-**Format:** Single PDF source — export this file to PDF for sharing
-
 ---
 
-## Executive summary (read this first)
+## Executive summary 
 
 **What Clique does in one line:**  
 Clique **reduces the search space** before debugging — it gathers evidence from multiple sources, eliminates noise, ranks what survives, and shows the developer **where to spend the next 15 minutes**.
@@ -16,9 +11,7 @@ Clique targets **investigation-heavy failures** — cases where engineers must *
 
 **What works today:** Pipeline — **Input** (CI log + git + RAG corpus) → **Processing** (parse, **hybrid RAG retrieve**, eliminate, rank) → **Output** (elimination replay + investigation lead). **No Gemini in demo** — RAG retrieval is live; LLM synthesis is next.
 
-**Where AI fits (honest):** Ranking, elimination, and hybrid RAG retrieval are built and auditable now. **Gemini synthesis** sits on the roadmap as the language layer over the same JSON contract — see Section 2b.
-
-**Strongest proof point:** Screenshot the **elimination panel** (`Evidence examined: 12`, discarded list filling, ranked survivors) — not the architecture diagram.
+**Where AI fits:** Ranking, elimination, and hybrid RAG retrieval are built and auditable now. **Gemini synthesis** sits on the roadmap as the language layer over the same JSON contract — see Section 2b.
 
 ---
 
