@@ -19,7 +19,6 @@ bash run-dev.sh
 |-----|---------|
 | http://localhost:5173/ | Product landing → 4-step walkthrough |
 | http://localhost:5173/?demo=1 | Full presentation deck + walkthrough |
-| http://localhost:5173/?demo=1&pdf=1 | PDF export preview |
 
 ## Pipeline
 
@@ -44,11 +43,3 @@ failed_build.log → Go log slicer → isolated_error.json
 ├── run-dev.sh                  Primary dev entrypoint
 └── app.py                      Legacy Streamlit (not the demo path)
 ```
-
-## PDF export
-
-```bash
-cd frontend && npm run pdf:preview
-```
-
-Output: `docs/Clique-Presentation.pdf` (gitignored — regenerate locally).

@@ -133,12 +133,10 @@ clique-triage/                              ← repo root
         ├── package.json
         ├── vercel.json                     Static deploy config
         ├── index.html
-        ├── scripts/
-        │   └── generate-pdf.mjs            Local PDF export for presentation deck
         ├── public/
         │   └── investigation_workspace.json  Static copy served to UI
         └── src/
-            ├── App.tsx                     Routing: landing, ?demo=1, ?pdf=1
+            ├── App.tsx                     Routing: landing, ?demo=1
             ├── components/
             │   ├── LandingScreen.tsx       Product landing
             │   ├── GuidedShell.tsx         4-step walkthrough shell
@@ -148,14 +146,13 @@ clique-triage/                              ← repo root
             │   ├── HandoffStep.tsx
             │   ├── demo/                   Presentation deck (~40 slide components)
             │   │   ├── PresentationShell.tsx
-            │   │   ├── PdfDeckExport.tsx
             │   │   ├── OriginScreen.tsx, UnderTheHoodFlow.tsx, …
             │   │   └── product-story/      GitHub/Cursor scenario mockups
             │   └── …                       Supporting UI components
             ├── demo/
             │   ├── presentationNarrative.ts  Slide copy & narrative
             │   ├── maintainerResearch.ts     Validation quotes & citations
-            │   └── pdfDeckSteps.ts           PDF page boundaries
+            │   └── presentationStepMeta.ts
             ├── lib/
             │   └── transformWorkspace.ts   JSON → UI view models
             ├── styles/
@@ -194,16 +191,6 @@ bash run-dev.sh
 |-----|---------|
 | http://localhost:5173/ | Same as live demo (landing + 4 steps) |
 | http://localhost:5173/?demo=1 | Full presentation + walkthrough |
-| http://localhost:5173/?demo=1&pdf=1 | PDF export preview |
-
-**Generate PDF deck (local):**
-
-```bash
-cd capstone/services/clique-triage/frontend
-npm run pdf:preview
-```
-
-Output: `capstone/services/clique-triage/docs/Clique-Presentation.pdf` (gitignored — regenerate locally).
 
 ---
 
@@ -247,8 +234,6 @@ Before asking an AI assistant for a fix, developers often need to understand whe
 ## Demo notes
 
 The current demo uses saved fixtures for reproducibility. The investigation engine is real. Live ecosystem integrations are part of the roadmap and will use the same Investigation Packet format demonstrated today.
-
-> The Vercel project is not linked to this GitHub repo. Pushing here does not redeploy the live site.
 
 ---
 
