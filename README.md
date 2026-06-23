@@ -7,7 +7,6 @@ Clique is an investigation triage tool for CI failures. Instead of trying to aut
 | | |
 |---|---|
 | **Live demo** | https://clique-demo-six.vercel.app/ |
-| **Pitch & Q&A** | [PITCH.md](PITCH.md) |
 | **Run locally** | `cd capstone/services/clique-triage && bash run-dev.sh` |
 
 ---
