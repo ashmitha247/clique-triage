@@ -8,6 +8,7 @@ Clique is an investigation triage tool for CI failures. Instead of trying to aut
 |---|---|
 | **Live demo** | https://clique-demo-six.vercel.app/ |
 | **Run locally** | `cd capstone/services/clique-triage && bash run-dev.sh` |
+| **Source** | `capstone/services/clique-triage/` (all application code lives here) |
 
 ---
 
@@ -39,7 +40,7 @@ Clique targets a different category of failure:
 * An upstream package may have changed
 * Developers must leave the repository and investigate across CI logs, git history, release notes, GitHub issues, and community discussions
 
-Research such as TOSEM 2023, FSE 2024, and Breaking-Good 2024 shows that identifying a failure is often easier than identifying its cause. See [PITCH.md](PITCH.md) for citations and maintainer validation.
+Research such as TOSEM 2023, FSE 2024, and Breaking-Good 2024 shows that identifying a failure is often easier than identifying its cause.
 
 ---
 
@@ -92,22 +93,90 @@ External evidence in the demo uses fixtures (`mock_internet/`) for reproducibili
 
 ## Repository structure
 
+The repo root is intentionally thin — **README, LICENSE, CI, and one service directory**. All product code is under `capstone/services/clique-triage/` (~110+ source files).
+
 ```text
-.
-├── README.md                          ← start here
-├── PITCH.md                           ← pitch, citations & Q&A
-├── LICENSE
-├── .github/workflows/log-slicer.yml   ← CI pipeline smoke test
-└── capstone/services/clique-triage/   ← application source
-    ├── cmd/log_slicer/                Go log parser
-    ├── triage_engine.py               Ranking and elimination engine
-    ├── rag/                           Hybrid retrieval components
-    ├── mock_internet/                 Demo evidence + RAG corpus
-    ├── data/                          Logs and generated JSON
-    ├── frontend/                      React demo UI
-    ├── run-dev.sh                     Local demo runner
-    └── docs/                          Generated PDF (local, gitignored)
+clique-triage/                              ← repo root
+├── README.md                               Project overview (this file)
+├── LICENSE                                 MIT
+├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── log-slicer.yml                  CI: build Go slicer, run pipeline, assert JSON output
+│
+└── capstone/services/clique-triage/        ← start here for source code
+    ├── run-dev.sh                          Primary entry: pipeline + Vite dev server
+    ├── run.sh                              Legacy Streamlit runner (not the demo path)
+    ├── go.mod
+    ├── requirements.txt
+    ├── triage_engine.py                    Python ranking, elimination, RAG orchestration
+    ├── app.py                              Legacy Streamlit UI
+    │
+    ├── cmd/log_slicer/
+    │   └── main.go                         Go CLI — parse CI log → isolated_error.json
+    │
+    ├── rag/
+    │   ├── __init__.py
+    │   └── retriever.py                    Hybrid BM25 + TF-IDF + RRF retrieval
+    │
+    ├── mock_internet/                      Demo fixtures (reproducible external evidence)
+    │   ├── external_evidence.json          Releases, issues, similar reports
+    │   └── rag_corpus.json                 Retrieval corpus for hybrid RAG
+    │
+    ├── data/                               Pipeline inputs & outputs
+    │   ├── failed_build.log                Sample CI log
+    │   ├── git_log_fixture.json            Git history when real git unavailable
+    │   ├── isolated_error.json             Go slicer output
+    │   └── investigation_workspace.json    Investigation Packet (triage output)
+    │
+    └── frontend/                           React + Vite SPA
+        ├── package.json
+        ├── vercel.json                     Static deploy config
+        ├── index.html
+        ├── scripts/
+        │   └── generate-pdf.mjs            Local PDF export for presentation deck
+        ├── public/
+        │   └── investigation_workspace.json  Static copy served to UI
+        └── src/
+            ├── App.tsx                     Routing: landing, ?demo=1, ?pdf=1
+            ├── components/
+            │   ├── LandingScreen.tsx       Product landing
+            │   ├── GuidedShell.tsx         4-step walkthrough shell
+            │   ├── EvidenceGatheredStep.tsx
+            │   ├── EliminationStep.tsx     Hero elimination panel
+            │   ├── InvestigationLeadStep.tsx
+            │   ├── HandoffStep.tsx
+            │   ├── demo/                   Presentation deck (~40 slide components)
+            │   │   ├── PresentationShell.tsx
+            │   │   ├── PdfDeckExport.tsx
+            │   │   ├── OriginScreen.tsx, UnderTheHoodFlow.tsx, …
+            │   │   └── product-story/      GitHub/Cursor scenario mockups
+            │   └── …                       Supporting UI components
+            ├── demo/
+            │   ├── presentationNarrative.ts  Slide copy & narrative
+            │   ├── maintainerResearch.ts     Validation quotes & citations
+            │   └── pdfDeckSteps.ts           PDF page boundaries
+            ├── lib/
+            │   └── transformWorkspace.ts   JSON → UI view models
+            ├── styles/
+            │   └── globals.css
+            └── types/
+                └── workspace.ts            Investigation Packet types
 ```
+
+**Where to look first**
+
+| If you want to… | Open |
+|-----------------|------|
+| Run the full demo | `run-dev.sh` |
+| See log parsing | `cmd/log_slicer/main.go` |
+| See ranking + elimination | `triage_engine.py` |
+| See hybrid retrieval | `rag/retriever.py` |
+| See the 4-step UI | `frontend/src/components/EliminationStep.tsx` |
+| See the presentation deck | `frontend/src/demo/presentationNarrative.ts` |
+| See demo data | `data/` and `mock_internet/` |
+
+Service-level quickstart: [capstone/services/clique-triage/README.md](capstone/services/clique-triage/README.md)
 
 ---
 
