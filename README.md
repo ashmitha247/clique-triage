@@ -51,21 +51,81 @@ The React UI replays that packet as a guided walkthrough: **Gather → Eliminate
 
 ## How it works
 
+### Architecture
+
 ```text
-CI Failure
-    ↓
-Go Log Extraction
-    ↓
-Error Snapshot (isolated_error.json)
-    ↓
-Hybrid Retrieval + Rule-Based Triage
-    ↓
-Rank & Eliminate
-    ↓
-Investigation Packet (investigation_workspace.json)
-    ↓
-React Investigation UI
+┌──────────────────────────────────────────────────────────────┐
+│              run-dev.sh  (entry orchestrator)                │
+└────────────────────────────┬─────────────────────────────────┘
+                             │
+     ┌───────────────────────┼───────────────────────┐
+     │                       │                       │
+┌────▼─────────┐   ┌─────────▼──────────┐   ┌───────▼────────┐
+│ Go Log       │   │ Python Triage        │   │ React SPA      │
+│ Slicer       │   │ Engine               │   │ (Vite :5173)   │
+│ cmd/log_     │   │ triage_engine.py     │   │ frontend/      │
+│ slicer/      │   │                      │   │                │
+└────┬─────────┘   │  ├─ git analysis     │   │  /  → 4 steps  │
+     │             │  ├─ release match     │   │  /?demo=1 deck │
+     │             │  └─ rag/retriever.py │   └───────▲────────┘
+     │             └─────────┬────────────┘           │
+     │                       │                        │
+     └───────────┬───────────┘                        │
+                 │ investigation_workspace.json        │
+                 └─────────────────────────────────────┘
+                      (synced to frontend/public/)
 ```
+
+CI smoke path (no UI): [`.github/workflows/log-slicer.yml`](.github/workflows/log-slicer.yml) — builds Go slicer, runs triage, asserts JSON output.
+
+### Data flow
+
+```text
+data/failed_build.log
+    │
+    ▼  cmd/log_slicer/main.go
+data/isolated_error.json          { service, exception, traceback }
+    │
+    ├── mock_internet/external_evidence.json  (releases, issues)
+    ├── mock_internet/rag_corpus.json         (retrieval corpus)
+    └── git log OR data/git_log_fixture.json
+    │
+    ▼  triage_engine.py
+    │    HybridRetriever.search()       → rag hits
+    │    git elimination rules          → discarded[]
+    │    strength / temporal scoring    → priority_leads[]
+    │
+data/investigation_workspace.json   Investigation Packet
+    │
+    ▼  cp → frontend/public/investigation_workspace.json
+    │
+    ▼  transformWorkspace.ts → React components
+    │    Gather → Eliminate → Rank → Investigation lead
+    │
+Browser @ localhost:5173
+```
+
+Key types: [`frontend/src/types/workspace.ts`](capstone/services/clique-triage/frontend/src/types/workspace.ts)
+
+### Entry points
+
+| Entry | Purpose |
+|-------|---------|
+| `bash run-dev.sh` | Full pipeline + dev server (primary) |
+| `./log_slicer` | Go step only → `data/isolated_error.json` |
+| `python3 triage_engine.py` | Triage only → `data/investigation_workspace.json` |
+| `cd frontend && npm run dev` | UI only (uses existing JSON in `public/`) |
+| `/` | Product walkthrough |
+| `/?demo=1` | Full presentation + walkthrough |
+
+**Config constants** (edit in source — not CLI flags):
+
+| Constant | File | Default | Effect |
+|----------|------|---------|--------|
+| `RAG_TOP_K` | `triage_engine.py` | 6 | Max retrieval hits |
+| `TEMPORAL_PROXIMITY_HOURS` | `triage_engine.py` | 6 | Release window filter |
+
+### Stage summary
 
 | Stage | Role |
 |-------|------|
