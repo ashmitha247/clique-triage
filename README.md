@@ -105,24 +105,6 @@ data/investigation_workspace.json   Investigation Packet
 Browser @ localhost:5173
 ```
 
-### Entry points
-
-| Entry | Purpose |
-|-------|---------|
-| `bash run-dev.sh` | Full pipeline + dev server (primary) |
-| `./log_slicer` | Go step only → `data/isolated_error.json` |
-| `python3 triage_engine.py` | Triage only → `data/investigation_workspace.json` |
-| `cd frontend && npm run dev` | UI only (uses existing JSON in `public/`) |
-| `/` | Product walkthrough |
-| `/?demo=1` | Full presentation + walkthrough |
-
-**Config constants**:
-
-| Constant | File | Default | Effect |
-|----------|------|---------|--------|
-| `RAG_TOP_K` | `triage_engine.py` | 6 | Max retrieval hits |
-| `TEMPORAL_PROXIMITY_HOURS` | `triage_engine.py` | 6 | Release window filter |
-
 ### Stage summary
 
 | Stage | Role |
