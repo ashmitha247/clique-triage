@@ -105,8 +105,6 @@ data/investigation_workspace.json   Investigation Packet
 Browser @ localhost:5173
 ```
 
-Key types: [`frontend/src/types/workspace.ts`](capstone/services/clique-triage/frontend/src/types/workspace.ts)
-
 ### Entry points
 
 | Entry | Purpose |
@@ -118,7 +116,7 @@ Key types: [`frontend/src/types/workspace.ts`](capstone/services/clique-triage/f
 | `/` | Product walkthrough |
 | `/?demo=1` | Full presentation + walkthrough |
 
-**Config constants** (edit in source — not CLI flags):
+**Config constants**:
 
 | Constant | File | Default | Effect |
 |----------|------|---------|--------|
