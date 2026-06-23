@@ -71,11 +71,14 @@ The React UI replays that packet as a guided walkthrough: **Gather → Eliminate
      │             └─────────┬────────────┘           │
      │                       │                        │
      └───────────┬───────────┘                        │
-                 │ investigation_workspace.json       |
-                 └─────────────────────────────────────
+                 │ investigation_workspace.json        │
+                 └─────────────────────────────────────┘
                       (synced to frontend/public/)
 ```
 
+CI smoke path (no UI): [`.github/workflows/log-slicer.yml`](.github/workflows/log-slicer.yml) — builds Go slicer, runs triage, asserts JSON output.
+
+### Data flow
 
 ```text
 data/failed_build.log
