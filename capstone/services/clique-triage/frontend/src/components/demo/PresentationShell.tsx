@@ -1,43 +1,34 @@
 import type { ReactNode } from "react";
-
-export type PresentationAct = "intro" | "research" | "workflow" | "architecture";
+import {
+  getPdfSectionIndex,
+  getPreludeStepMeta,
+  PDF_SECTION_LABELS,
+  PDF_SECTION_ORDER,
+  type PreludeStep,
+} from "../../demo/presentationStepMeta";
 
 interface PresentationShellProps {
-  act: PresentationAct;
-  title?: string;
-  subtitle?: string;
-  showStepHeader?: boolean;
+  step: PreludeStep;
   onBack?: () => void;
   onNext: () => void;
-  nextLabel: string;
   showBack?: boolean;
+  canvasClassName?: string;
   children: ReactNode;
 }
 
-const ACT_INDEX: Record<PresentationAct, number> = {
-  intro: 0,
-  research: 1,
-  workflow: 2,
-  architecture: 3,
-};
-
-const ACT_LABELS = ["Intro", "Research", "Today", "Approach", "Product"];
-
 export function PresentationShell({
-  act,
-  title,
-  subtitle,
-  showStepHeader = true,
+  step,
   onBack,
   onNext,
-  nextLabel,
   showBack = true,
+  canvasClassName,
   children,
 }: PresentationShellProps) {
-  const current = ACT_INDEX[act];
+  const meta = getPreludeStepMeta(step);
+  const activeSectionIndex = getPdfSectionIndex(meta.section);
 
   return (
-    <div className="presentation-canvas">
+    <div className={`presentation-canvas${canvasClassName ? ` ${canvasClassName}` : ""}`}>
       <div className="presentation-pattern" aria-hidden />
       <svg className="presentation-wave presentation-wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden>
         <path d="M0,64 C360,120 720,0 1080,48 C1260,72 1380,96 1440,80 L1440,0 L0,0 Z" fill="rgba(99,102,241,0.06)" />
@@ -51,24 +42,26 @@ export function PresentationShell({
           <div className="presentation-brand">
             <span className="presentation-brand-name">Clique</span>
           </div>
-          <div className="presentation-acts" aria-label="Presentation act">
-            {ACT_LABELS.map((label, index) => (
+          <div className="presentation-acts" aria-label="Presentation section">
+            {PDF_SECTION_ORDER.map((section, index) => (
               <span
-                key={label}
-                className={`presentation-act${index === current ? " presentation-act-active" : ""}${index < current ? " presentation-act-done" : ""}${index === 4 ? " presentation-act-product" : ""}`}
+                key={section}
+                className={`presentation-act${index === activeSectionIndex ? " presentation-act-active" : ""}${index < activeSectionIndex ? " presentation-act-done" : ""}`}
               >
-                {label}
+                {PDF_SECTION_LABELS[section]}
               </span>
             ))}
           </div>
         </header>
 
-        {showStepHeader && title && (
-          <div className="presentation-step-header">
-            <h2 className="presentation-step-title">{title}</h2>
-            {subtitle && <p className="presentation-step-subtitle">{subtitle}</p>}
-          </div>
-        )}
+        <p className="presentation-section-progress">
+          {PDF_SECTION_LABELS[meta.section]} · {meta.sectionIndex}/{meta.sectionTotal}
+        </p>
+
+        <div className="presentation-step-header">
+          <h2 className="presentation-step-title">{meta.title}</h2>
+          {meta.subtitle && <p className="presentation-step-subtitle">{meta.subtitle}</p>}
+        </div>
 
         <div className="presentation-body">{children}</div>
 
@@ -81,7 +74,7 @@ export function PresentationShell({
             <span />
           )}
           <button type="button" className="btn-presentation-primary" onClick={onNext}>
-            {nextLabel}
+            {meta.nextLabel}
           </button>
         </footer>
       </div>

@@ -20,8 +20,8 @@ export const MAINTAINER_QUOTES: MaintainerQuoteCard[] = [
     ],
   },
   {
-    name: "Ajeet",
-    title: "Maintainer · Open Sox",
+    name: "Ajeet Singh",
+    title: "Software developer & maintainer · Open Sox",
     quotes: [
       "finding the issue is always the most time taking part",
       "i use cursor and yeah it does help if the context within it's reach",
@@ -30,5 +30,8 @@ export const MAINTAINER_QUOTES: MaintainerQuoteCard[] = [
   },
 ];
 
-export const WORKFLOW_OBSERVATION =
-  "Developers rarely struggle to see that a failure happened. They struggle because external dependency breaks mean hunting releases and issues — before any tool can fix the build confidently.";
+export const MAINTAINER_QUOTE_EMPHASIS: Record<string, string[]> = {
+  "Figuring out the root cause and connecting the update to the breaking change or runtime behaviour can be time consuming.":
+    ["time consuming"],
+  "i use cursor and yeah it does help if the context within it's reach": ["context within it's reach"],
+};

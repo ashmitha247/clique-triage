@@ -1,10 +1,18 @@
 interface HandoffStepProps {
   leadPrimary: string;
   primaryLeadUrl?: string;
+  demoMode?: boolean;
+  onNext?: () => void;
   onRestart: () => void;
 }
 
-export function HandoffStep({ leadPrimary, primaryLeadUrl, onRestart }: HandoffStepProps) {
+export function HandoffStep({
+  leadPrimary,
+  primaryLeadUrl,
+  demoMode = false,
+  onNext,
+  onRestart,
+}: HandoffStepProps) {
   return (
     <div className="handoff-screen">
       <ProductAtmosphereWrapper />
@@ -35,11 +43,22 @@ export function HandoffStep({ leadPrimary, primaryLeadUrl, onRestart }: HandoffS
           </li>
           <li>Verify whether that dependency change explains the failure — then fix in your editor</li>
         </ol>
+
+        <p className="handoff-product-note">
+          This is the internal core product of Clique. The final product is intended to be an
+          extension — this is the internal working of the said extension.
+        </p>
       </div>
 
-      <button type="button" className="btn-primary btn-restart" onClick={onRestart}>
-        Restart demo
-      </button>
+      {demoMode && onNext ? (
+        <button type="button" className="btn-primary btn-restart" onClick={onNext}>
+          See roadmap
+        </button>
+      ) : (
+        <button type="button" className="btn-primary btn-restart" onClick={onRestart}>
+          Restart demo
+        </button>
+      )}
     </div>
   );
 }

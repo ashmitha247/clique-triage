@@ -424,12 +424,13 @@ Clique is not for every red build. It’s for the ones where investigation time 
 |----------|--------|
 | Did you talk to real users? | Yes — **Huda Naaz** (kuberef, CNCF/DevOps/Python) and **Ajeet** (Open Sox maintainer). See table above. |
 | **How often does this happen?** | **Not every failure.** Most are syntax errors, missing env vars, or failed unit tests — Cursor handles those. Clique targets the **expensive minority**: clean PR breaks, traceback + timeline mismatch, multi-source hunts where engineers must leave the repo and gather external evidence before forming a hypothesis. Ajeet said external breaks are rare; Huda sees them more in fast-moving deps. |
+| **Aren't dependency updates usually backward compatible?** | Yes — most are. That's why Clique is not for every red build. Clique is for the cases where compatibility still breaks: clean PR, traceback points into a dependency, and you need to identify which upstream release in a noisy window explains the failure. Backward compatibility is common; the investigation cost is the pain when it breaks anyway. |
 | Why “Investigation Triage” not “AI-Assisted”? | MVP is deterministic. No Gemini in the demo. AI summarizes **already-ranked** evidence on the roadmap. |
 | Where’s the AI? | MVP ranks deterministically. Gemini summarizes ranked evidence next (RAG course). |
 | Where’s RAG? | Roadmap replaces fixtures with BM25 + embedding retrieval (Hoopla pipeline). |
 | Why not Dependabot? | They notify updates; we investigate a **specific failure**. |
 | Why not Cursor / Copilot / Claude with the log pasted? | Before you ask Cursor for a fix, you need to know what evidence matters. **Cursor helps solve a problem. Clique helps define the problem.** |
-| **Why not Cursor + web search on the log?** | Often **70–90% there in one session** with good prompting. Missing: auditable elimination, repeatable packet, same answer on the next build. **Clique → Cursor** automates the hunt first, then you fix — roadmap: CI trigger + MCP. |
+| **Why not Cursor + web search on the log?** | Often **70–90% there in one session** with good prompting. In 2026, GitHub also has **Fix with Copilot** on Actions runs. Missing: auditable elimination, repeatable packet, same starting point on the next failure. **Clique → Cursor** automates the hunt first, then you fix — roadmap: CI trigger + MCP. |
 | **Why not skip Clique and go straight to Cursor?** | For in-repo bugs, yes. Clique is for clean-PR / upstream breaks: replaces tab-hopping with automatic collection + rule-out, then hands Cursor a focused packet. |
 | Why ranking? I'll search GitHub myself. | Finding info is easy. **Deciding what deserves attention** when there are dozens of signals is hard. Point to: 12 examined → 3 ranked → 1 lead. |
 | Is this the root cause? | No — **most likely investigation lead** + supporting evidence. We rank; humans investigate and decide. |

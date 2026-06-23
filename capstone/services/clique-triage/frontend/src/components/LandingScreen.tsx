@@ -17,11 +17,11 @@ export function LandingScreen({ onStart, demoMode = false }: LandingScreenProps)
       <div className="landing-demo-bridge-shell">
         <header className="landing-demo-topbar">
           <span className="landing-demo-brand">Clique</span>
-          <nav className="landing-demo-acts" aria-label="Demo act">
-            {["Intro", "Research", "Today", "Approach", "Product"].map((label) => (
+          <nav className="landing-demo-acts" aria-label="Presentation section">
+            {["Problem", "Under-the-hood", "Sources", "vs LLM", "Architecture", "Demo"].map((label) => (
               <span
                 key={label}
-                className={`landing-demo-act${label === "Product" ? " landing-demo-act-active" : ""}`}
+                className={`landing-demo-act${label === "Demo" ? " landing-demo-act-active" : ""}`}
               >
                 {label}
               </span>
@@ -29,7 +29,7 @@ export function LandingScreen({ onStart, demoMode = false }: LandingScreenProps)
           </nav>
         </header>
 
-        <p className="landing-act-label">Act 4 — Live walkthrough</p>
+        <p className="landing-act-label">Huda POV demo</p>
         <h1 className="landing-demo-headline">{LANDING_DEMO_HEADLINE}</h1>
         <p className="landing-demo-bridge">{LANDING_DEMO_BRIDGE}</p>
         <p className="landing-demo-line">{LANDING_DEMO_LINE}</p>

@@ -153,6 +153,8 @@ export interface TransformedWorkspace {
   exception: string;
   gitSource: string;
   ragRetrieval?: RagRetrieval;
+  priorityLeads: PriorityLead[];
+  discarded: DiscardedItem[];
   evidenceSummary: EvidenceSummary;
   eliminated: EliminatedItem[];
   reportTimeline: StreamEvent[];
@@ -171,20 +173,34 @@ export interface TransformedWorkspace {
   };
 }
 
-/** Guided walkthrough — demo mode prepends intro → research → workflow → architecture. */
+/** Guided walkthrough — demo mode uses presentation prelude acts. */
 export type GuidedStep =
   | "loading"
   | "error"
-  | "intro"
-  | "research"
-  | "workflow"
-  | "architecture"
+  | "origin"
+  | "web-research"
+  | "maintainer-validation"
+  | "huda-today"
+  | "approach-plain"
+  | "under-the-hood"
+  | "technical-architecture"
+  | "architecture-overview"
+  | "data-sources"
+  | "value-beyond-llm"
+  | "demo-scenario-intro"
+  | "demo-pr-failure"
+  | "demo-processing-pipeline"
+  | "demo-packet-delivery"
+  | "demo-cursor-handoff"
+  | "demo-build-status"
+  | "demo-thank-you"
   | "landing"
   | "step1"
   | "step2"
   | "step3"
   | "step4"
-  | "done";
+  | "done"
+  | "limitations";
 
 export const GUIDED_STEP_COUNT = 4;
 
@@ -195,26 +211,49 @@ export interface GuidedStepCopy {
 }
 
 export const GUIDED_STEP_COPY: Record<
-  Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">,
+  Exclude<
+    GuidedStep,
+    | "loading"
+    | "landing"
+    | "done"
+    | "error"
+    | "origin"
+    | "web-research"
+    | "maintainer-validation"
+    | "huda-today"
+    | "approach-plain"
+    | "under-the-hood"
+    | "technical-architecture"
+    | "architecture-overview"
+    | "data-sources"
+    | "value-beyond-llm"
+    | "demo-scenario-intro"
+    | "demo-pr-failure"
+    | "demo-processing-pipeline"
+    | "demo-packet-delivery"
+    | "demo-cursor-handoff"
+    | "demo-build-status"
+    | "demo-thank-you"
+    | "limitations"
+  >,
   GuidedStepCopy
 > = {
   step1: {
-    title: "Your build failed",
-    subtitle: "Here's the error from your CI pipeline.",
-    caption: "Most tools stop here. Clique starts here.",
+    title: "CI failed",
+    subtitle: "Huda's clean PR didn't touch the code in this traceback.",
   },
   step2: {
-    title: "Evidence gathered from 4 places",
-    subtitle: "Logs, git history, package releases, and community reports — matched together.",
-    caption: "Release notes and issues ranked by relevance to this failure.",
+    title: "External dependency evidence gathered",
+    subtitle: "Local fixture files — git, releases, issues — searched and ranked together.",
+    caption: "Fixtures simulate what live PyPI/GitHub would return in production.",
   },
   step3: {
     title: "Ruled out what doesn't matter",
-    subtitle: "12 signals examined. Most were noise.",
+    subtitle: "Signals examined — most were noise.",
     caption: "The value isn't finding the answer — it's narrowing where to look.",
   },
   step4: {
-    title: "Start here",
+    title: "Investigation lead — where to spend 15 minutes",
     subtitle: "Your most likely investigation lead — where to spend the next 15 minutes.",
   },
 };
@@ -234,7 +273,7 @@ export type InvestigationPhase =
   | "error";
 
 export const REPLAY_STEP_LABELS: Record<Exclude<InvestigationPhase, "loading" | "trigger" | "error">, string> = {
-  parsing: "Extracting failure signature",
+  parsing: "Extracting error message and stack trace",
   dependency: "Mapping dependency chain",
   ecosystem: "Hybrid RAG retrieval (BM25 + TF-IDF)",
   eliminating: "Ruling out alternatives",

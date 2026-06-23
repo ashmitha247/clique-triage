@@ -44,28 +44,19 @@ function truncate(text: string, max = 72): string {
   return `${(lastSpace > 40 ? slice.slice(0, lastSpace) : slice).trim()}…`;
 }
 
+function strengthToFilled(strength: string): number {
+  if (strength === "high") return 4;
+  if (strength === "medium") return 3;
+  return 2;
+}
+
 function matchSignalsForLead(lead: PriorityLead): MatchSignal[] {
-  if (lead.type === "community_issue") {
-    return [
-      { label: "Traceback Match", filled: 5, total: 5 },
-      { label: "Dependency Overlap", filled: 5, total: 5 },
-      { label: "Temporal Alignment", filled: 4, total: 5 },
-      { label: "Community Corroboration", filled: 5, total: 5 },
-    ];
-  }
-  if (lead.type === "package_release") {
-    return [
-      { label: "Traceback Match", filled: 4, total: 5 },
-      { label: "Dependency Overlap", filled: 5, total: 5 },
-      { label: "Temporal Alignment", filled: 5, total: 5 },
-      { label: "Community Corroboration", filled: 4, total: 5 },
-    ];
-  }
+  const filled = strengthToFilled(lead.strength);
   return [
-    { label: "Traceback Match", filled: 3, total: 5 },
-    { label: "Dependency Overlap", filled: 3, total: 5 },
-    { label: "Temporal Alignment", filled: 3, total: 5 },
-    { label: "Community Corroboration", filled: 2, total: 5 },
+    { label: "Traceback Match", filled, total: 5 },
+    { label: "Dependency Overlap", filled: Math.min(filled + 1, 5), total: 5 },
+    { label: "Temporal Alignment", filled, total: 5 },
+    { label: "Community Corroboration", filled: Math.max(filled - 1, 1), total: 5 },
   ];
 }
 
@@ -78,63 +69,31 @@ function friendlyDiscardReason(item: DiscardedItem): string {
   return item.reason;
 }
 
-/** Decoys examined and ruled out — not in git history, but plausible investigation noise. */
-function syntheticEliminations(): EliminatedItem[] {
-  return [
-    {
-      name: "express 4.21.0 release",
-      reason: "Package not in failure dependency chain",
-      status: "eliminated",
-    },
-  ];
-}
-
 function buildRankedSummaries(workspace: InvestigationWorkspace): RankedLeadSummary[] {
   const ranked: RankedLeadSummary[] = [];
 
   for (const lead of workspace.priority_leads) {
     if (lead.type === "package_release") {
       ranked.push({ name: `${lead.package} v${lead.version} release` });
-    }
-    if (lead.type === "community_issue") {
+    } else if (lead.type === "community_issue") {
       ranked.push({ name: `Issue #${lead.issue_id}` });
+    } else if (lead.type === "repository_commit") {
+      ranked.push({ name: truncate(lead.subject, 48) });
+    } else if (lead.type === "source_file") {
+      ranked.push({ name: `${lead.file}:${lead.line}` });
     }
   }
-
-  ranked.push({ name: "Issue #483 (similar report)" });
 
   return ranked;
 }
 
 function buildEvidenceSummary(workspace: InvestigationWorkspace): EvidenceSummary {
-  const ecosystemSignals = workspace.priority_leads.filter(
-    (lead) => lead.type === "community_issue" || lead.type === "package_release",
-  ).length;
-
-  const examinedCount =
-    workspace.discarded.length +
-    workspace.priority_leads.length +
-    syntheticEliminations().length +
-    ecosystemSignals;
+  const examinedCount = workspace.discarded.length + workspace.priority_leads.length;
 
   return {
     examinedCount,
     ranked: buildRankedSummaries(workspace),
   };
-}
-
-function deprioritizedSignals(workspace: InvestigationWorkspace): EliminatedItem[] {
-  const signals: EliminatedItem[] = [];
-  for (const lead of workspace.priority_leads) {
-    if (lead.type === "source_file" && lead.file === "payment_gateway.py") {
-      signals.push({
-        name: lead.file,
-        reason: "Stable across 14 successful builds",
-        status: "deprioritized",
-      });
-    }
-  }
-  return signals;
 }
 
 function commitLabel(subject: string): string {
@@ -151,7 +110,7 @@ function buildStreamEvents(workspace: InvestigationWorkspace): StreamEvent[] {
         timestamp: lead.released_at,
         tone: "normal",
         label: "Release Published",
-        detail: `${lead.package} ${lead.version} — proxy subsystem refactor`,
+        detail: `${lead.package} ${lead.version} — ${truncate(lead.changes, 60)}`,
       });
     } else if (lead.type === "community_issue") {
       events.push({
@@ -160,16 +119,6 @@ function buildStreamEvents(workspace: InvestigationWorkspace): StreamEvent[] {
         label: "Community Issue Opened",
         detail: truncate(lead.title, 90),
       });
-      const issueTime = parseTs(lead.timestamp);
-      if (issueTime) {
-        const similar = new Date(issueTime.getTime() + 4 * 60 * 1000);
-        events.push({
-          timestamp: similar.toISOString().replace(".000Z", "Z"),
-          tone: "normal",
-          label: "Similar Reports Appear",
-          detail: "Additional community threads reference the same initialization failure",
-        });
-      }
     } else if (lead.type === "repository_commit") {
       events.push({
         timestamp: lead.date,
@@ -212,22 +161,31 @@ function buildReportTimeline(events: StreamEvent[]): StreamEvent[] {
 }
 
 function buildInvestigationLead(workspace: InvestigationWorkspace): InvestigationLead {
-  let primary = "vendor_sdk v8.1.4 release";
+  let primary = "No ranked release lead";
   const supporting: string[] = [];
 
   for (const lead of workspace.priority_leads) {
     if (lead.type === "package_release") {
       primary = `${lead.package} v${lead.version} release`;
     }
+  }
+
+  for (const lead of workspace.priority_leads) {
     if (lead.type === "community_issue") {
       supporting.push(`Issue #${lead.issue_id}`);
     }
+    if (lead.type === "package_release" && primary !== `${lead.package} v${lead.version} release`) {
+      supporting.push(`${lead.package} v${lead.version}`);
+    }
+    if (lead.type === "repository_commit") {
+      supporting.push(truncate(lead.subject, 40));
+    }
+    if (lead.type === "package_release" && lead.hours_before_failure <= 6) {
+      supporting.push(`Released ${lead.hours_before_failure.toFixed(1)}h before failure`);
+    }
   }
 
-  supporting.push("Issue #483 (similar report)");
-  supporting.push("Timing correlation");
-
-  return { primary, supporting };
+  return { primary, supporting: [...new Set(supporting)] };
 }
 
 function buildLikelyCause(workspace: InvestigationWorkspace): LikelyCause {
@@ -235,7 +193,7 @@ function buildLikelyCause(workspace: InvestigationWorkspace): LikelyCause {
     if (lead.type === "package_release") {
       return {
         headline: `${lead.package} v${lead.version}`,
-        detail: "removed legacy proxy support",
+        detail: truncate(lead.changes, 80),
       };
     }
   }
@@ -245,12 +203,19 @@ function buildLikelyCause(workspace: InvestigationWorkspace): LikelyCause {
   };
 }
 
-function buildDependencyChain(_workspace: InvestigationWorkspace): DependencyLink[] {
-  return [
-    { id: "vendor", label: "vendor_sdk" },
-    { id: "httpx", label: "httpx" },
-    { id: "client", label: "client.py" },
-  ];
+function buildDependencyChain(workspace: InvestigationWorkspace): DependencyLink[] {
+  const chain: DependencyLink[] = [];
+
+  for (const lead of workspace.priority_leads) {
+    if (lead.type === "package_release" && !chain.some((link) => link.label === lead.package)) {
+      chain.push({ id: `pkg-${lead.package}`, label: lead.package });
+    }
+    if (lead.type === "source_file" && !chain.some((link) => link.label === lead.file)) {
+      chain.push({ id: `file-${lead.file}`, label: lead.file });
+    }
+  }
+
+  return chain;
 }
 
 function buildEcosystemCards(workspace: InvestigationWorkspace): EcosystemCard[] {
@@ -287,12 +252,6 @@ function buildEcosystemCards(workspace: InvestigationWorkspace): EcosystemCard[]
         title: `GitHub Issue #${lead.issue_id}`,
         detail: truncate(lead.title, 100),
       });
-      cards.push({
-        id: "community-match",
-        kind: "community",
-        title: "Matching community reports",
-        detail: "Multiple threads reference the same Client.__init__ proxies failure",
-      });
     }
   }
 
@@ -312,12 +271,17 @@ function buildConstellation(workspace: InvestigationWorkspace) {
     }
   }
 
+  const pkgLead = workspace.priority_leads.find(
+    (lead): lead is Extract<PriorityLead, { type: "package_release" }> => lead.type === "package_release",
+  );
+  const depLabel = pkgLead?.package ?? "dependency";
+
   return {
     nodes: [
       { id: "release", label: "Release Notes", sublabel: releaseSub, x: 200, y: 48 },
       { id: "failure", label: "CI Failure", sublabel: "Build error", x: 200, y: 160 },
       { id: "community", label: issueTitle, sublabel: "Traceback match", x: 340, y: 160 },
-      { id: "dependency", label: "Dependency Chain", sublabel: "vendor_sdk", x: 200, y: 272 },
+      { id: "dependency", label: "Dependency Chain", sublabel: depLabel, x: 200, y: 272 },
     ],
     edges: [
       { from: "release", to: "failure" },
@@ -329,6 +293,43 @@ function buildConstellation(workspace: InvestigationWorkspace) {
   };
 }
 
+function selectPrimaryLead(workspace: InvestigationWorkspace): {
+  label: string;
+  url?: string;
+  signals: MatchSignal[];
+} {
+  const releaseLead = workspace.priority_leads.find((lead) => lead.type === "package_release");
+  const issueLead = workspace.priority_leads.find((lead) => lead.type === "community_issue");
+
+  if (releaseLead && releaseLead.type === "package_release") {
+    return {
+      label: `${releaseLead.package} v${releaseLead.version} release`,
+      url: issueLead?.type === "community_issue" ? issueLead.url : undefined,
+      signals: matchSignalsForLead(releaseLead),
+    };
+  }
+
+  if (issueLead && issueLead.type === "community_issue") {
+    return {
+      label: `Community Issue #${issueLead.issue_id}`,
+      url: issueLead.url,
+      signals: matchSignalsForLead(issueLead),
+    };
+  }
+
+  return {
+    label: "Investigation lead",
+    signals: matchSignalsForLead({
+      type: "source_file",
+      strength: "medium",
+      reason: "",
+      file: "",
+      path: "",
+      line: 0,
+    }),
+  };
+}
+
 export function transformWorkspace(workspace: InvestigationWorkspace): TransformedWorkspace {
   const eliminatedFromDiscards: EliminatedItem[] = workspace.discarded.map((item) => ({
     name: item.files.map((f) => f.split("/").pop() ?? f).join(", "),
@@ -336,35 +337,10 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     status: "eliminated" as const,
   }));
 
-  const eliminated = [
-    ...eliminatedFromDiscards,
-    ...syntheticEliminations(),
-    ...deprioritizedSignals(workspace),
-  ];
+  const eliminated = eliminatedFromDiscards;
   const evidenceSummary = buildEvidenceSummary(workspace);
   const streamEvents = buildStreamEvents(workspace);
-
-  let primaryLeadLabel = "Community Issue #482";
-  let primaryLeadUrl: string | undefined;
-  let primarySignals = matchSignalsForLead({
-    type: "community_issue",
-    strength: "high",
-    reason: "",
-    issue_id: "482",
-    title: "",
-    timestamp: "",
-    url: "",
-    traceback_match: "",
-  });
-
-  for (const lead of workspace.priority_leads) {
-    if (lead.type === "community_issue") {
-      primaryLeadLabel = `Community Issue #${lead.issue_id}`;
-      primaryLeadUrl = lead.url;
-      primarySignals = matchSignalsForLead(lead);
-      break;
-    }
-  }
+  const primaryLead = selectPrimaryLead(workspace);
 
   return {
     failureClock: fmtClock(workspace.build_failure_timestamp),
@@ -372,6 +348,8 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     exception: workspace.isolated_exception,
     gitSource: workspace.git_source,
     ragRetrieval: workspace.rag_retrieval,
+    priorityLeads: workspace.priority_leads,
+    discarded: workspace.discarded,
     evidenceSummary,
     eliminated,
     reportTimeline: buildReportTimeline(streamEvents),
@@ -379,9 +357,9 @@ export function transformWorkspace(workspace: InvestigationWorkspace): Transform
     ecosystemCards: buildEcosystemCards(workspace),
     investigationLead: buildInvestigationLead(workspace),
     likelyCause: buildLikelyCause(workspace),
-    primarySignals,
-    primaryLeadLabel,
-    primaryLeadUrl,
+    primarySignals: primaryLead.signals,
+    primaryLeadLabel: primaryLead.label,
+    primaryLeadUrl: primaryLead.url,
     constellation: buildConstellation(workspace),
   };
 }

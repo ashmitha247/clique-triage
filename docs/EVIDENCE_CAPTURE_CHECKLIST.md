@@ -1,4 +1,4 @@
-# Evidence capture checklist (InnovateZ submission)
+# Evidence capture checklist
 
 Complete these after the guided UI is deployed. **You** record and export — this doc is the checklist.
 
@@ -20,7 +20,7 @@ Open http://localhost:5173/?demo=1 and walk through:
 - [ ] Step 3 shows full elimination panel immediately
 - [ ] Step 4 shows investigation lead + supporting evidence
 - [ ] Done screen has handoff checklist + Restart (returns to Research in demo mode)
-- [ ] **Judge demo mode** badge visible top-right
+- [ ] **Demo mode** badge visible top-right
 
 Normal `/` (no `?demo=1`) should skip Acts 1–2 and start at landing.
 
@@ -63,7 +63,7 @@ npx vercel dist --prod
 
 - [ ] Paste **`https://YOUR-URL.vercel.app/?demo=1`** in Google Form
 - [ ] Update README demo link
-- [ ] Update INNOVATEZ PDF submission links section
+- [ ] Update presentation deck links section
 - [ ] Send product URL (`/`) to maintainers with MAINTAINER_DEMO template
 
 ---
@@ -78,12 +78,12 @@ npx vercel dist --prod
 
 ## 6. Export PDF
 
-Source: [INNOVATEZ_2026_SUBMISSION.md](./INNOVATEZ_2026_SUBMISSION.md)
+Source: [PRODUCT_OVERVIEW.md](./PRODUCT_OVERVIEW.md)
 
 - [ ] Re-export after UI screenshots updated
 - [ ] Lead PDF with step 3 screenshot + one-line value prop
-- [ ] Mention 3-act judge demo (`/?demo=1`) + guided walkthrough (4 steps, user-controlled)
-- [ ] Upload single PDF to InnovateZ Google Form
+- [ ] Mention full presentation (`/?demo=1`) + guided walkthrough (4 steps, user-controlled)
+- [ ] Upload single PDF for sharing
 
 ---
 

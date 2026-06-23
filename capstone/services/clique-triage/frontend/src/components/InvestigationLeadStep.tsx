@@ -29,6 +29,11 @@ export function InvestigationLeadStep({ lead, primaryLeadUrl }: InvestigationLea
       <p className="investigation-lead-note">
         This is where we'd spend the next 15 minutes — not a confirmed root cause.
       </p>
+
+      <p className="investigation-lead-product-note">
+        This is the internal core product of Clique. The final product is intended to be an
+        extension — this is the internal working of the said extension.
+      </p>
     </div>
   );
 }

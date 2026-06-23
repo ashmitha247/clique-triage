@@ -1,8 +1,8 @@
-# Clique — InnovateZ 2026 Next Round Submission
+# Clique — Product overview
 
 **Team project:** Clique (Investigation Triage Workspace)  
 **Document version:** June 2026  
-**Format:** Single PDF source — export this file to PDF for Google Form upload
+**Format:** Single PDF source — export this file to PDF for sharing
 
 ---
 
@@ -18,17 +18,38 @@ Clique targets **investigation-heavy failures** — cases where engineers must *
 
 **Where AI fits (honest):** Ranking and elimination are built and auditable now. **Gemini + RAG** sit on the roadmap as the synthesis and retrieval layers over the same JSON contract — see Section 2b.
 
-**Strongest proof point for judges:** Screenshot the **elimination panel** (`Evidence examined: 12`, discarded list filling, ranked survivors) — not the architecture diagram.
+**Strongest proof point:** Screenshot the **elimination panel** (`Evidence examined: 12`, discarded list filling, ranked survivors) — not the architecture diagram.
 
 ---
 
-## Submission links (also enter in Google Form)
+## Demo links
 
 | Item | Link / note |
 |------|-------------|
 | **GitHub repository (required)** | https://github.com/ashmitha247/clique-triage |
-| **MVP / demo (preferred)** | Deploy: `cd capstone/services/clique-triage/frontend && npm run build && npx vercel dist --prod`. Local: `bash run-dev.sh` → http://localhost:5173 — **Start investigation**, click **Next** through 4 guided steps. |
-| **Primary demo path** | Guided walkthrough @ port **5173** (`run-dev.sh`). Step 3 elimination panel = hero screenshot. Legacy Streamlit on 8501 is **not** the demo. |
+| **MVP / demo (preferred)** | Local: `bash run-dev.sh` → http://localhost:5173/?demo=1 — click **Next** through presentation prelude (10 slides) then **Start investigation** → 4 guided steps → **Limitations**. Live: https://clique-demo-six.vercel.app/ |
+| **Primary demo path** | Guided walkthrough @ port **5173** (`run-dev.sh`). `/?demo=1` = full presentation path. Step 3 elimination panel = hero screenshot. Legacy Streamlit on 8501 is **not** the demo. |
+
+## Interactive demo flow (`/?demo=1`) — mirrors this PDF
+
+The React slide deck follows the same section order as this document. Top nav labels: **Problem · Under-Hood · Sources · vs LLM · Architecture · Demo**.
+
+| PDF § | Slide step ID | Screen |
+|-------|---------------|--------|
+| **1. Problem** | `origin` | Where this started (founder curiosity) |
+| **1. Problem** | `web-research` | Cited empirical findings (TOSEM, FSE, EMSE) |
+| **1. Problem** | `maintainer-validation` | Huda Naaz + Ajeet Singh quotes + validation matrix |
+| **1. Problem** | `niche-scope` | Correlation-not-causation + comparable complement extensions |
+| **1. Problem** | `huda-today` | Huda's expensive investigation step today |
+| **2. Under-the-Hood** | `approach-plain` | Outcome in plain English (no jargon) |
+| **2. Under-the-Hood** | `under-the-hood` | Pipeline, scoring, elimination (technical) |
+| **3. Data Sources** | `data-sources` | Fixtures, APIs, papers, maintainer research |
+| **4. vs Generic LLM** | `value-beyond-llm` | Why paste-into-chat is not the same product |
+| **5. Architecture** | `architecture` | Engine built today vs extension delivery roadmap |
+| **6. Demo** | `landing` → `step1`–`step4` | Huda POV kuberef scenario — elimination panel hero |
+| **6. Demo** | `limitations` | Mock vs live, honest scope → Restart |
+
+Product-only path (`/`): skips prelude; ends at standard handoff (`done`), not limitations.
 
 ---
 
@@ -100,7 +121,7 @@ OUTPUT
   React replay                  → elimination sidebar + investigation lead
 ```
 
-**No LLM in the live demo.** Every ranking decision maps to a visible rule above. This satisfies InnovateZ’s request for concrete execution evidence.
+**No LLM in the live demo.** Every ranking decision maps to a visible rule above.
 
 ---
 
@@ -293,7 +314,7 @@ OUTPUT: Investigation replay in browser — elimination sidebar, ranked leads,
 
 ## User research (supporting, not “market validation”)
 
-Two informal maintainer conversations (CNCF ecosystem contributor; production deploy engineer) informed the problem framing. Names withheld pending permission. See `PITCH.md` for quotes.
+Two informal maintainer conversations informed the problem framing: **Huda Naaz** (kuberef, CNCF) and **Ajeet Singh** (Open Sox). See `frontend/src/demo/maintainerResearch.ts` and the **Maintainer validation** slide in `/?demo=1`.
 
 ---
 
@@ -376,7 +397,7 @@ The MVP proves Layer 1. Layers 2–3 are the AI hackathon extension path with a 
                                       ▼
                  ┌─────────────────────────────────────────────────┐
                  │     React SPA (Vite, port 5173)                 │
-                 │  Guided UI: landing + 4 steps + handoff          │
+                 │  Guided UI: presentation prelude + 4 steps + limitations │
                  │  Elimination sidebar | Investigation lead       │
                  └─────────────────────────────────────────────────┘
 
@@ -414,7 +435,7 @@ capstone/services/clique-triage/
 ├── frontend/                    # React investigation replay
 ├── run-dev.sh                   # Primary entry: pipeline + dev server
 ├── .github/workflows/log-slicer.yml
-└── docs/INNOVATEZ_2026_SUBMISSION.md  # This document
+└── docs/PRODUCT_OVERVIEW.md  # This document
 ```
 
 ---

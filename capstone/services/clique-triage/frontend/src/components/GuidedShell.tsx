@@ -3,7 +3,31 @@ import type { GuidedStep, GuidedStepCopy } from "../types/workspace";
 import { ProductAtmosphere } from "./ProductAtmosphere";
 
 interface GuidedShellProps {
-  step: Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">;
+  step: Exclude<
+    GuidedStep,
+    | "loading"
+    | "landing"
+    | "done"
+    | "error"
+    | "origin"
+    | "web-research"
+    | "maintainer-validation"
+    | "huda-today"
+    | "approach-plain"
+    | "under-the-hood"
+    | "technical-architecture"
+    | "architecture-overview"
+    | "data-sources"
+    | "demo-scenario-intro"
+    | "demo-pr-failure"
+    | "demo-processing-pipeline"
+    | "demo-packet-delivery"
+    | "demo-cursor-handoff"
+    | "demo-build-status"
+    | "demo-thank-you"
+    | "value-beyond-llm"
+    | "limitations"
+  >;
   copy: GuidedStepCopy;
   onBack: () => void;
   onNext: () => void;
@@ -12,7 +36,31 @@ interface GuidedShellProps {
 }
 
 const STEP_NUMBERS: Record<
-  Exclude<GuidedStep, "loading" | "landing" | "done" | "error" | "intro" | "research" | "workflow" | "architecture">,
+  Exclude<
+    GuidedStep,
+    | "loading"
+    | "landing"
+    | "done"
+    | "error"
+    | "origin"
+    | "web-research"
+    | "maintainer-validation"
+    | "huda-today"
+    | "approach-plain"
+    | "under-the-hood"
+    | "technical-architecture"
+    | "architecture-overview"
+    | "data-sources"
+    | "demo-scenario-intro"
+    | "demo-pr-failure"
+    | "demo-processing-pipeline"
+    | "demo-packet-delivery"
+    | "demo-cursor-handoff"
+    | "demo-build-status"
+    | "demo-thank-you"
+    | "value-beyond-llm"
+    | "limitations"
+  >,
   number
 > = {
   step1: 1,

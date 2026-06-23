@@ -1,9 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { IntroScreen } from "./components/demo/IntroScreen";
-import { ArchitectureScreen } from "./components/demo/ArchitectureScreen";
-import { CurrentWorkflowScreen } from "./components/demo/CurrentWorkflowScreen";
-import { ResearchScreen } from "./components/demo/ResearchScreen";
+import { ApproachPlainScreen } from "./components/demo/ApproachPlainScreen";
+import { DemoBuildStatusScreen } from "./components/demo/DemoBuildStatusScreen";
+import { DemoThankYouScreen } from "./components/demo/DemoThankYouScreen";
+import { DemoCursorHandoffScreen } from "./components/demo/DemoCursorHandoffScreen";
+import { DemoPacketDeliveryScreen } from "./components/demo/DemoPacketDeliveryScreen";
+import { DemoProcessingPipelineScreen } from "./components/demo/DemoProcessingPipelineScreen";
+import { DemoPrFailureScreen } from "./components/demo/DemoPrFailureScreen";
+import { DemoScenarioIntroScreen } from "./components/demo/DemoScenarioIntroScreen";
+import { DataSourcesScreen } from "./components/demo/DataSourcesScreen";
+import { HudaWorkflowScreen } from "./components/demo/HudaWorkflowScreen";
+import { MaintainerValidationScreen } from "./components/demo/MaintainerValidationScreen";
+import { PdfDeckExport } from "./components/demo/PdfDeckExport";
+import { OriginScreen } from "./components/demo/OriginScreen";
+import { UnderTheHoodScreen } from "./components/demo/UnderTheHoodScreen";
+import { ArchitectureOverviewScreen } from "./components/demo/ArchitectureOverviewScreen";
+import { TechnicalArchitectureScreen } from "./components/demo/TechnicalArchitectureScreen";
+import { ValueBeyondLLMScreen } from "./components/demo/ValueBeyondLLMScreen";
+import { WebResearchScreen } from "./components/demo/WebResearchScreen";
 import { EvidenceGatheredStep } from "./components/EvidenceGatheredStep";
 import { EliminationStep } from "./components/EliminationStep";
 import { FailureStep } from "./components/FailureStep";
@@ -17,10 +31,35 @@ import "./styles/globals.css";
 
 type ActiveStep = Exclude<GuidedStep, "loading" | "error">;
 
+const DEMO_PRELUDE: ActiveStep[] = [
+  "origin",
+  "web-research",
+  "maintainer-validation",
+  "huda-today",
+  "approach-plain",
+  "value-beyond-llm",
+  "under-the-hood",
+  "technical-architecture",
+  "architecture-overview",
+  "data-sources",
+];
+
+const DEMO_SECTION: ActiveStep[] = [
+  "demo-scenario-intro",
+  "demo-pr-failure",
+  "demo-processing-pipeline",
+  "demo-packet-delivery",
+  "demo-cursor-handoff",
+  "demo-build-status",
+  "demo-thank-you",
+];
+
 function buildStepOrder(demoMode: boolean): ActiveStep[] {
-  const product: ActiveStep[] = ["landing", "step1", "step2", "step3", "step4", "done"];
-  if (!demoMode) return product;
-  return ["intro", "research", "workflow", "architecture", ...product];
+  const productEnd: ActiveStep[] = demoMode
+    ? ["step1", "step2", "step3", "step4"]
+    : ["landing", "step1", "step2", "step3", "step4", "done"];
+  if (!demoMode) return productEnd;
+  return [...DEMO_PRELUDE, ...DEMO_SECTION, ...productEnd];
 }
 
 function nextStep(current: ActiveStep, order: ActiveStep[]): ActiveStep {
@@ -34,8 +73,12 @@ function prevStep(current: ActiveStep, order: ActiveStep[]): ActiveStep {
 }
 
 export default function App() {
-  const demoMode = useMemo(
-    () => new URLSearchParams(window.location.search).has("demo"),
+  const demoMode = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("demo");
+  }, []);
+  const pdfExport = useMemo(
+    () => new URLSearchParams(window.location.search).has("pdf"),
     [],
   );
   const stepOrder = useMemo(() => buildStepOrder(demoMode), [demoMode]);
@@ -47,20 +90,25 @@ export default function App() {
     fetchWorkspace()
       .then((workspace) => {
         setData(transformWorkspace(workspace));
-        setStep(demoMode ? "intro" : "landing");
+        setStep(demoMode ? "origin" : "landing");
       })
       .catch(() => setStep("error"));
   }, [demoMode]);
 
   const handleStart = useCallback(() => setStep("step1"), []);
   const handleNext = useCallback(() => {
-    setStep((current) => nextStep(current as ActiveStep, stepOrder));
-  }, [stepOrder]);
+    setStep((current) => {
+      if (demoMode && current === "step4") {
+        return "origin";
+      }
+      return nextStep(current as ActiveStep, stepOrder);
+    });
+  }, [demoMode, stepOrder]);
   const handleBack = useCallback(() => {
     setStep((current) => prevStep(current as ActiveStep, stepOrder));
   }, [stepOrder]);
   const handleRestart = useCallback(() => {
-    setStep(demoMode ? "intro" : "landing");
+    setStep(demoMode ? "origin" : "landing");
   }, [demoMode]);
 
   if (step === "loading") {
@@ -84,78 +132,144 @@ export default function App() {
     );
   }
 
-  const isPrelude =
-    demoMode &&
-    (step === "intro" || step === "research" || step === "workflow" || step === "architecture");
+  if (pdfExport) {
+    return (
+      <div className="session-shell session-shell-pdf-export">
+        <PdfDeckExport data={data} />
+      </div>
+    );
+  }
+
+  const isPrelude = demoMode && DEMO_PRELUDE.includes(step as ActiveStep);
+  const isDemoSection = demoMode && DEMO_SECTION.includes(step as ActiveStep);
   const isLandingDemo = demoMode && step === "landing";
   const isProductPhase =
-    step === "step1" || step === "step2" || step === "step3" || step === "step4" || step === "done" ||
+    step === "step1" ||
+    step === "step2" ||
+    step === "step3" ||
+    step === "step4" ||
+    step === "done" ||
     (!demoMode && step === "landing");
+
+  const motionProps = {
+    initial: { opacity: 0, y: 8 } as const,
+    animate: { opacity: 1, y: 0 } as const,
+    exit: { opacity: 0, y: -8 } as const,
+    transition: { duration: 0.35 },
+  };
 
   return (
     <div className="session-shell">
       <div className="ambient-glow ambient-glow-a" aria-hidden />
       <div className="ambient-glow ambient-glow-b" aria-hidden />
       <div
-        className={`session${isPrelude ? " session-presentation" : ""}${isLandingDemo ? " session-landing-demo" : ""}${isProductPhase ? " session-product" : ""}`}
+        className={`session${isPrelude || isDemoSection ? " session-presentation" : ""}${isLandingDemo ? " session-landing-demo" : ""}${isProductPhase ? " session-product" : ""}`}
       >
         <AnimatePresence mode="wait">
-          {step === "intro" && (
-            <motion.div
-              key="intro"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <IntroScreen onNext={handleNext} />
+          {step === "origin" && (
+            <motion.div key="origin" {...motionProps}>
+              <OriginScreen onNext={handleNext} />
             </motion.div>
           )}
 
-          {step === "research" && (
-            <motion.div
-              key="research"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <ResearchScreen onNext={handleNext} />
+          {step === "web-research" && (
+            <motion.div key="web-research" {...motionProps}>
+              <WebResearchScreen onBack={handleBack} onNext={handleNext} />
             </motion.div>
           )}
 
-          {step === "workflow" && (
-            <motion.div
-              key="workflow"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <CurrentWorkflowScreen onBack={handleBack} onNext={handleNext} />
+          {step === "maintainer-validation" && (
+            <motion.div key="maintainer-validation" {...motionProps}>
+              <MaintainerValidationScreen onBack={handleBack} onNext={handleNext} />
             </motion.div>
           )}
 
-          {step === "architecture" && (
-            <motion.div
-              key="architecture"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <ArchitectureScreen onBack={handleBack} onNext={handleNext} />
+          {step === "huda-today" && (
+            <motion.div key="huda-today" {...motionProps}>
+              <HudaWorkflowScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "approach-plain" && (
+            <motion.div key="approach-plain" {...motionProps}>
+              <ApproachPlainScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "value-beyond-llm" && (
+            <motion.div key="value-beyond-llm" {...motionProps}>
+              <ValueBeyondLLMScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "under-the-hood" && (
+            <motion.div key="under-the-hood" {...motionProps}>
+              <UnderTheHoodScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "technical-architecture" && (
+            <motion.div key="technical-architecture" {...motionProps}>
+              <TechnicalArchitectureScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "architecture-overview" && (
+            <motion.div key="architecture-overview" {...motionProps}>
+              <ArchitectureOverviewScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "data-sources" && (
+            <motion.div key="data-sources" {...motionProps}>
+              <DataSourcesScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-scenario-intro" && (
+            <motion.div key="demo-scenario-intro" {...motionProps}>
+              <DemoScenarioIntroScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-pr-failure" && (
+            <motion.div key="demo-pr-failure" {...motionProps}>
+              <DemoPrFailureScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-processing-pipeline" && (
+            <motion.div key="demo-processing-pipeline" {...motionProps}>
+              <DemoProcessingPipelineScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-packet-delivery" && (
+            <motion.div key="demo-packet-delivery" {...motionProps}>
+              <DemoPacketDeliveryScreen data={data} onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-cursor-handoff" && (
+            <motion.div key="demo-cursor-handoff" {...motionProps}>
+              <DemoCursorHandoffScreen data={data} onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-build-status" && (
+            <motion.div key="demo-build-status" {...motionProps}>
+              <DemoBuildStatusScreen onBack={handleBack} onNext={handleNext} />
+            </motion.div>
+          )}
+
+          {step === "demo-thank-you" && (
+            <motion.div key="demo-thank-you" {...motionProps}>
+              <DemoThankYouScreen onBack={handleBack} onNext={handleNext} />
             </motion.div>
           )}
 
           {step === "landing" && (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
+            <motion.div key="landing" {...motionProps}>
               <LandingScreen onStart={handleStart} demoMode={demoMode} />
             </motion.div>
           )}
@@ -175,7 +289,12 @@ export default function App() {
           {step === "step2" && (
             <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <GuidedShell step="step2" copy={GUIDED_STEP_COPY.step2} onBack={handleBack} onNext={handleNext}>
-                <EvidenceGatheredStep gitSource={data.gitSource} ragRetrieval={data.ragRetrieval} />
+                <EvidenceGatheredStep
+                  gitSource={data.gitSource}
+                  ragRetrieval={data.ragRetrieval}
+                  priorityLeads={data.priorityLeads}
+                  discarded={data.discarded}
+                />
               </GuidedShell>
             </motion.div>
           )}
@@ -195,21 +314,15 @@ export default function App() {
                 copy={GUIDED_STEP_COPY.step4}
                 onBack={handleBack}
                 onNext={handleNext}
-                nextLabel="See handoff"
+                nextLabel={demoMode ? "Restart demo" : "See handoff"}
               >
                 <InvestigationLeadStep lead={data.investigationLead} primaryLeadUrl={data.primaryLeadUrl} />
               </GuidedShell>
             </motion.div>
           )}
 
-          {step === "done" && (
-            <motion.div
-              key="done"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }}
-            >
+          {step === "done" && !demoMode && (
+            <motion.div key="done" {...motionProps}>
               <HandoffStep
                 leadPrimary={data.investigationLead.primary}
                 primaryLeadUrl={data.primaryLeadUrl}
@@ -217,6 +330,7 @@ export default function App() {
               />
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
     </div>

@@ -2,9 +2,7 @@
 
 **Clique** is an incident triage workspace that assembles build logs, repository context, dependency updates, and community reports into a single investigation replay — helping developers decide what to look at first.
 
-> **Judges / demo:** See **[PITCH.md](PITCH.md)** for the full hackathon narrative, MVP vs roadmap, maintainer interview validation, and how GitHub Actions + RAG + Go CLI coursework maps to Clique.
->
-> **InnovateZ 2026 next round:** See **[docs/INNOVATEZ_2026_SUBMISSION.md](docs/INNOVATEZ_2026_SUBMISSION.md)** — PDF-ready submission covering under-the-hood design, data sources, architecture, demo scenarios, and limitations.
+> **Product overview:** See **[docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md)** — design, data sources, architecture, demo scenarios, and limitations.
 
 ---
 
@@ -63,21 +61,32 @@ cd capstone/services/clique-triage
 bash run-dev.sh
 ```
 
-Open [http://localhost:5173](http://localhost:5173) → **Start investigation** → click **Next** through 4 steps.
+| URL | Purpose |
+|-----|---------|
+| [http://localhost:5173/](http://localhost:5173/) | Product landing → **Start investigation** → 4-step walkthrough |
+| [http://localhost:5173/?demo=1](http://localhost:5173/?demo=1) | Full presentation (prelude slides + demo story + walkthrough) |
+| [http://localhost:5173/?demo=1&pdf=1](http://localhost:5173/?demo=1&pdf=1) | PDF export preview (print or `npm run pdf:preview`) |
 
-**Judge demo (InnovateZ video):** [http://localhost:5173/?demo=1](http://localhost:5173/?demo=1) — 3-act flow: maintainer research → architecture → product walkthrough.
+---
 
-### Deploy demo (Vercel)
+## Live demo
+
+**https://clique-demo-six.vercel.app/**
+
+Same experience as local root URL: landing page → **Start investigation** → Gather / Eliminate / Rank / Investigation lead.
+
+The Vercel project is **not** linked to this GitHub repo. Pushing code here does **not** redeploy or change the live URL. Do not run `vercel --prod` unless you intentionally want a new production deploy.
+
+### Generate PDF deck (local only)
 
 ```bash
 cd capstone/services/clique-triage/frontend
-npm run build
-npx vercel dist --prod
+npm run pdf:preview
 ```
 
-Paste the production URL in InnovateZ form and [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md).
+Writes `capstone/services/clique-triage/docs/Clique-Presentation.pdf` (regenerated locally; not required for the live demo link).
 
-**Maintainer / judge kit:** [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md) · [docs/EVIDENCE_CAPTURE_CHECKLIST.md](docs/EVIDENCE_CAPTURE_CHECKLIST.md)
+**Docs:** [docs/MAINTAINER_DEMO.md](docs/MAINTAINER_DEMO.md) · [docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md)
 
 **Requirements:** Python 3, Go (optional — run separately), Node.js 18+ inside WSL.
 
@@ -100,6 +109,7 @@ capstone/services/clique-triage/
 ├── rag/                       Hybrid RAG (BM25 + TF-IDF + RRF)
 ├── mock_internet/             RAG corpus + external evidence fixtures
 ├── frontend/                React investigation replay
+├── frontend/scripts/        PDF export (local)
 ├── run-dev.sh               Primary dev entrypoint
 └── app.py                   Legacy Streamlit UI
 ```

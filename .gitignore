@@ -1,6 +1,8 @@
 .DS_Store
 .devbox/
 .venv/
+.github/workflows/.cursor/
 capstone/services/clique-triage/log_slicer
+capstone/services/clique-triage/docs/*.pdf
 capstone/services/clique-triage/frontend/node_modules/
 capstone/services/clique-triage/frontend/dist/
