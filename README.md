@@ -7,7 +7,6 @@ Clique is an investigation triage tool for CI failures. Instead of trying to aut
 | | |
 |---|---|
 | **Live demo** | https://clique-demo-six.vercel.app/ |
-| **Product overview** | [docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md) |
 | **Pitch & Q&A** | [PITCH.md](PITCH.md) |
 | **Run locally** | `cd capstone/services/clique-triage && bash run-dev.sh` |
 
@@ -41,7 +40,7 @@ Clique targets a different category of failure:
 * An upstream package may have changed
 * Developers must leave the repository and investigate across CI logs, git history, release notes, GitHub issues, and community discussions
 
-Research such as TOSEM 2023, FSE 2024, and Breaking-Good 2024 shows that identifying a failure is often easier than identifying its cause. See [docs/PRODUCT_OVERVIEW.md](docs/PRODUCT_OVERVIEW.md) for citations and maintainer validation.
+Research such as TOSEM 2023, FSE 2024, and Breaking-Good 2024 shows that identifying a failure is often easier than identifying its cause. See [PITCH.md](PITCH.md) for citations and maintainer validation.
 
 ---
 
@@ -97,11 +96,8 @@ External evidence in the demo uses fixtures (`mock_internet/`) for reproducibili
 ```text
 .
 ├── README.md                          ← start here
-├── PITCH.md                           ← pitch & Q&A
+├── PITCH.md                           ← pitch, citations & Q&A
 ├── LICENSE
-├── docs/                              ← product documentation
-│   ├── PRODUCT_OVERVIEW.md
-│   └── MAINTAINER_DEMO.md
 ├── .github/workflows/log-slicer.yml   ← CI pipeline smoke test
 └── capstone/services/clique-triage/   ← application source
     ├── cmd/log_slicer/                Go log parser

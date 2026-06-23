@@ -8,7 +8,7 @@ Go log extraction, Python hybrid-RAG triage, and a React investigation walkthrou
 |---|---|
 | **Live demo** | https://clique-demo-six.vercel.app/ |
 | **Root README** | [../../../README.md](../../../README.md) |
-| **Product overview** | [../../../docs/PRODUCT_OVERVIEW.md](../../../docs/PRODUCT_OVERVIEW.md) |
+| **Pitch & Q&A** | [../../../PITCH.md](../../../PITCH.md) |
 
 ## Run locally
 
