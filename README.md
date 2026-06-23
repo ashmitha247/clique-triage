@@ -12,17 +12,6 @@ Clique is an investigation triage tool for CI failures. Instead of trying to aut
 
 ---
 
-## Live demo
-
-**https://clique-demo-six.vercel.app/**
-
-| URL | Purpose |
-|-----|---------|
-| `/` | Product landing → **Start investigation** → 4-step walkthrough |
-| `/?demo=1` | Full presentation (prelude slides + demo story + walkthrough) |
-
----
-
 ## Problem
 
 Many CI failures are straightforward:
