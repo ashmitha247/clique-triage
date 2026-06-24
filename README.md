@@ -2,7 +2,7 @@
 
 > Reduce the search space before debugging.
 
-Clique is an investigation triage tool for CI failures. Instead of trying to automatically fix a broken build, Clique gathers evidence from logs, git history, releases, and community reports, then produces an **Investigation Packet** that helps developers decide where to start investigating.
+Clique is an investigation triage tool for CI failures. Instead of trying to automatically fix a broken build, Clique gathers evidence from logs, git history, releases, and community reports, then produces an **Investigation Packet** that helps developers decide where to start investigating. Mainly for repos with CI build fails due to **external dependencies**.
 
 | | |
 |---|---|
